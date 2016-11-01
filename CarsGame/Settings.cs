@@ -50,23 +50,23 @@ namespace CarsGame
         public static int RoadsNumber = 12;
         public static int CrosswaysNumber = 4;
 
-        public static string CrashSound = "crashsound.wav";
-        public static string FixSound = "fixsound.wav";
+        public static string CrashSound = "../../Images/crashsound.wav";
+        public static string FixSound = "../../Images/fixsound.wav";
 
-        public static string CarPic = "car.png";
-        public static string TruckPic = "truck.png";
-        public static string BusPic = "bus.png";
-        public static string CarBrokenPic = "car_broken.png";
-        public static string TruckBrokenPic = "truck_broken.png";
-        public static string BusBrokenPic = "bus_broken.png";
-        public static string FieldPic = "field.png";
-        public static string VertRoadPic = "vert_road.png";
-        public static string HorRoadPic = "hor_road.png";
-        public static string CrossPic = "crossway.png";
-        public static string HorGreenPic = "horgreen.png";
-        public static string VertGreenPic = "VertGreen.png";
-        public static string BrokenLightPic = "brokenlight.png";
-        public static string FixingLightPic = "fixinglight.png";
+        public static string CarPic = "../../Images/car.png";
+        public static string TruckPic = "../../Images/truck.png";
+        public static string BusPic = "../../Images/bus.png";
+        public static string CarBrokenPic = "../../Images/car_broken.png";
+        public static string TruckBrokenPic = "../../Images/truck_broken.png";
+        public static string BusBrokenPic = "../../Images/bus_broken.png";
+        public static string FieldPic = "../../Images/field.png";
+        public static string VertRoadPic = "../../Images/vert_road.png";
+        public static string HorRoadPic = "../../Images/hor_road.png";
+        public static string CrossPic = "../../Images/crossway.png";
+        public static string HorGreenPic = "../../Images/horgreen.png";
+        public static string VertGreenPic = "../../Images/VertGreen.png";
+        public static string BrokenLightPic = "../../Images/brokenlight.png";
+        public static string FixingLightPic = "../../Images/fixinglight.png";
 
         public static Image ICarPic = Image.FromFile(CarPic);
         public static Image ITruckPic = Image.FromFile(TruckPic);
