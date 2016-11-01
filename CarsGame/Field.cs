@@ -302,7 +302,7 @@ namespace CarsGame
             }
             foreach (Vehicle vehicle in vehicles)
             {
-                g.DrawRectangle(Pens.Red, (float)vehicle.Position[C.X], (float)vehicle.Position[C.Y],10,10);
+                g.FillRectangle(Brushes.Red, (float)vehicle.Position[C.X], (float)vehicle.Position[C.Y],5,5);
                 g.TranslateTransform((float)vehicle.Position[C.X], (float)vehicle.Position[C.Y]);
                 switch (vehicle.Direction)
                 {
