@@ -71,6 +71,11 @@ namespace CarsGame
             Field.CheckFixLight(e.X, e.Y);
         }
 
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Field.LightsInspection();
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             updateState.Stop();

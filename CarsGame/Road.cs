@@ -60,14 +60,41 @@ namespace CarsGame
             }
         }
 
-        public virtual double[] GetStartPosition()
+        public double[] GetStartPosition()//поставить машину на начало дороги
         {
-            return new double[2]{ 0,0};
+            return new double[2] { carsStart[C.X], carsStart[C.Y] };
         }
-        public virtual double[] GetEndPosition()
+        public double[] GetEndPosition()//поставить машину на конец дороги
         {
-            return new double[2] { 0, 0 };
+            return new double[2] { carsEnd[C.X], carsEnd[C.Y] };
         }
+        public double[] GetResumePosition(int beg_end, int direction)//поставить машину на начало дороги
+        {
+            double[] coords;
+            if (beg_end == 0) coords = new double[2] { carsStart[C.X], carsStart[C.Y] };
+            else coords = new double[2] { carsEnd[C.X], carsEnd[C.Y] };
+            switch (direction)
+            {
+                case C.RIGHT:
+                    coords[C.X] += C.VehicleSize.Width;
+                    break;
+                case C.DOWN:
+                    coords[C.Y] += C.VehicleSize.Width;
+                    break;
+                case C.LEFT:
+                    coords[C.X] -= C.VehicleSize.Width;
+                    break;
+                default:
+                    coords[C.Y] -= C.VehicleSize.Width;
+                        break;
+            }
+            return coords;
+        }
+        public double[] GetEndResumePosition(int direction)//поставить машину на конец дороги
+        {
+            return new double[2] { carsEnd[C.X], carsEnd[C.Y] };
+        }
+
         public double[] GetNullPosition()//Конец дороги, идущий от края экрана
         {
             if (this.startCrossway == null)

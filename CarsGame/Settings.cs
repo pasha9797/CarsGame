@@ -9,6 +9,65 @@ namespace CarsGame
 {
     public static class C
     {
+        //*** Каталог файлов ***
+        private static string Root = "../../Images/";
+
+        //*** Звуки ***
+        public static string CrashSound = Root + "crashsound.wav";
+        public static string FixSound = Root + "fixsound.wav";
+
+        //*** Изображения ***
+        public static Image ICarPic = Image.FromFile(Root + "car.png");
+        public static Image ITruckPic = Image.FromFile(Root + "truck.png");
+        public static Image IBusPic = Image.FromFile(Root + "bus.png");
+        public static Image IEvacPic = Image.FromFile(Root + "evac.png");
+        public static Image ICarBrokenPic = Image.FromFile(Root + "car_broken.png");
+        public static Image ITruckBrokenPic = Image.FromFile(Root + "truck_broken.png");
+        public static Image IBusBrokenPic = Image.FromFile(Root + "bus_broken.png");
+        public static Image IEvacBrokenPic = Image.FromFile(Root + "evac_broken.png");
+        public static Image IFieldPic = Image.FromFile(Root + "field.png");
+        public static Image IVertRoadPic = Image.FromFile(Root + "vert_road.png");
+        public static Image IHorRoadPic = Image.FromFile(Root + "hor_road.png");
+        public static Image ICrossPic = Image.FromFile(Root + "crossway.png");
+        public static Image IHorGreenPic = Image.FromFile(Root + "horgreen.png");
+        public static Image IVertGreenPic = Image.FromFile(Root + "VertGreen.png");
+        public static Image IBrokenLightPic = Image.FromFile(Root + "brokenlight.png");
+        public static Image IFixingLightPic = Image.FromFile(Root + "fixinglight.png");
+
+        //*** Размеры машин ***
+        public static Size VehicleSize = ICarPic.Size;
+        public static Size EvacSize = IEvacPic.Size;
+
+        //*** Настраиваемые величины  ***
+        public static int UpdateInterval = 50; //интервал передвижения и перерисовки
+        public static int CreateVehiclesInterval = 2000; //интервал создания новых машин
+        public static int DayTime = 1000; //длительность одного часа
+        public static int TrafficLightChangeIntervalMax = 8000; //максимальное время между переключениями режимов светофора
+        public static int TrafficLightChangeIntervalMin = 5000; //минимальное такое время
+        public static int AlertTime = 2000; //длительность отображения уведомления
+        public static int FixLightDelay = 4500; //за сколько будет починен светофор
+        public static int KillVehicleDelay = 20000; //через сколько будет удалена машина если за ней не приедет эвакуатор
+        public static int VehicleStep = 5; //на сколько пикселей сдвинется машина за 1 шаг
+        public static int CrosswayChance = 20; //число, обратное шансу поломки светофора
+        public static int DailyScore = 350; //количество очков начисляемых каждые сутки
+        public static int CrashScore = 115; //сколько очков снимается за разбитую машину
+        public static int mainInfoWidth = 300; //ширина основного информационного поля
+        public static int mainInfoHeight = 110; //его высота
+        public static int gameoverWidth = 480; //ширина уведомления о конце игры
+        public static int gameoverHeight = 200; //его высота
+
+        //*** Неизменяемые величины  ***
+        public static int RoadsNumber = 12;
+        public static int CrosswaysNumber = 4;
+        public static int StepsToPassVertRoad = (int)((IVertRoadPic.Size.Height-VehicleSize.Width) / VehicleStep);
+        public static int StepsToPassHorRoad = (int)((IHorRoadPic.Size.Width - VehicleSize.Width) / VehicleStep);
+        public static int StepsToPassCrosswayStraight = (int)((ICrossPic.Size.Height + VehicleSize.Width) / VehicleStep);
+        public static int StepsToPassCrosswayRight = (int)(ICrossPic.Size.Height / VehicleStep);
+        public static int StepsToPassCrosswayLeft = (int)(ICrossPic.Size.Height / VehicleStep * 2);
+        public static double bigDelta = (C.IHorRoadPic.Size.Height * 1.5 - C.VehicleSize.Height) / 2;
+        public static double smallDelta = (C.IHorRoadPic.Size.Height / 2 + C.VehicleSize.Height) / 2;
+
+        //*** Обозначения ***
         public const int UP = 0;
         public const int RIGHT = 1;
         public const int DOWN = 2;
@@ -17,6 +76,7 @@ namespace CarsGame
         public const int CAR = 0;
         public const int TRUCK = 1;
         public const int BUS = 2;
+        public const int EVAC = 3;
 
         public static int X = 0;
         public static int Y = 1;
@@ -28,73 +88,5 @@ namespace CarsGame
         public static int VERTGREEN = 1;
         public static int BROKENLIGHT = 2;
         public static int FIXINGLIGHT = 3;
-
-        public static int UpdateInterval = 50;
-        public static int CreateVehiclesInterval = 2000;
-        public static int DayTime = 1000;
-        public static int TrafficLightChangeIntervalMax = 5000;
-        public static int TrafficLightChangeIntervalMin = 3500;
-        public static int AlertTime = 2000;
-        public static int FixLightDelay = 4500;
-        public static int KillVehicleDelay = 10000;
-        public static int VehicleStep = 5;//на сколько пикселей сдвинется машина
-        public static int OutOfView = 50;
-        public static int CrosswayChance = 7;//чем больше цифра, тем меньше вероятность поломки
-        public static int DailyScore = 350;
-        public static int CrashScore = 115;
-        public static int mainInfoWidth = 300;
-        public static int mainInfoHeight = 110;
-        public static int gameoverWidth = 480;
-        public static int gameoverHeight = 200;
-
-        public static int RoadsNumber = 12;
-        public static int CrosswaysNumber = 4;
-
-        public static string CrashSound = "../../Images/crashsound.wav";
-        public static string FixSound = "../../Images/fixsound.wav";
-
-        public static string CarPic = "../../Images/car.png";
-        public static string TruckPic = "../../Images/truck.png";
-        public static string BusPic = "../../Images/bus.png";
-        public static string CarBrokenPic = "../../Images/car_broken.png";
-        public static string TruckBrokenPic = "../../Images/truck_broken.png";
-        public static string BusBrokenPic = "../../Images/bus_broken.png";
-        public static string FieldPic = "../../Images/field.png";
-        public static string VertRoadPic = "../../Images/vert_road.png";
-        public static string HorRoadPic = "../../Images/hor_road.png";
-        public static string CrossPic = "../../Images/crossway.png";
-        public static string HorGreenPic = "../../Images/horgreen.png";
-        public static string VertGreenPic = "../../Images/VertGreen.png";
-        public static string BrokenLightPic = "../../Images/brokenlight.png";
-        public static string FixingLightPic = "../../Images/fixinglight.png";
-
-        public static Image ICarPic = Image.FromFile(CarPic);
-        public static Image ITruckPic = Image.FromFile(TruckPic);
-        public static Image IBusPic = Image.FromFile(BusPic);
-        public static Image ICarBrokenPic = Image.FromFile(CarBrokenPic);
-        public static Image ITruckBrokenPic = Image.FromFile(TruckBrokenPic);
-        public static Image IBusBrokenPic = Image.FromFile(BusBrokenPic);
-        public static Image IFieldPic = Image.FromFile(FieldPic);
-        public static Image IVertRoadPic = Image.FromFile(VertRoadPic);
-        public static Image IHorRoadPic = Image.FromFile(HorRoadPic);
-        public static Image ICrossPic = Image.FromFile(CrossPic);
-        public static Image IHorGreenPic = Image.FromFile(HorGreenPic);
-        public static Image IVertGreenPic = Image.FromFile(VertGreenPic);
-        public static Image IBrokenLightPic = Image.FromFile(BrokenLightPic);
-        public static Image IFixingLightPic = Image.FromFile(FixingLightPic);
-
-        public static Size HorRoadSize = Image.FromFile(HorRoadPic).Size;
-        public static Size VertRoadSize = Image.FromFile(VertRoadPic).Size;
-        public static Size CrossSize = Image.FromFile(CrossPic).Size;
-        public static Size CarSize = Image.FromFile(CarPic).Size;
-        public static Size TruckSize = Image.FromFile(TruckPic).Size;
-        public static Size BusSize = Image.FromFile(BusPic).Size;
-
-        public static int StepsToPassVertRoad = (int)(VertRoadSize.Height/VehicleStep*0.51);
-        public static int StepsToPassHorRoad = (int)(HorRoadSize.Width / VehicleStep*0.75);
-        public static int StepsToPassCrosswayStraight = (int)(CrossSize.Height / VehicleStep * 1.8);
-        public static int StepsToPassCrosswayRight = (int)(CrossSize.Height / VehicleStep *0.6);
-        public static int StepsToPassCrosswayLeft = (int)(CrossSize.Height / VehicleStep*1.9);
-        public static int StepsToPassCrosswayLeftHalf = (int)(CrossSize.Height / VehicleStep * 1.3);
     }
 }

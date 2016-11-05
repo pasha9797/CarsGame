@@ -15,14 +15,13 @@ namespace CarsGame
         }
         protected override int GetTurn()//в какую сторону повернуть на текущем перекрестке
         {
-                return (currentRoadorCrossway as Crossway).Turning[C.CAR];
+                return (curPlacement as Crossway).Turning[C.CAR];
         }
 
-        public Car(double x,double y):base(x,y)
+        public Car(Road road):base(road)
         {
             picture = C.ICarPic;
-            this.size[C.X] = C.CarSize.Width;
-            this.size[C.Y] = C.CarSize.Height;
+         
         }
     }
 }

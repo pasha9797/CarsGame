@@ -15,14 +15,12 @@ namespace CarsGame
         }
         protected override int GetTurn()
         {
-            return (currentRoadorCrossway as Crossway).Turning[C.CAR];
+            return (curPlacement as Crossway).Turning[C.TRUCK];
         }
 
-        public Truck(double x, double y) : base(x, y)
+        public Truck(Road road) : base(road)
         {
             picture = C.ITruckPic;
-            this.size[C.X] = C.TruckSize.Width;
-            this.size[C.Y] = C.TruckSize.Height;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace CarsGame
         private HorRoad[] leftRightConnected;
         private Timer changeLight;
         private int[] turning;
+        private int crosswayChance;
 
         public double[] Position
         {
@@ -50,6 +51,17 @@ namespace CarsGame
                 if (value >= 0 && value <= 2) lightMode = value;
             }
         }
+        public int CrosswayChance
+        {
+            get
+            {
+                return crosswayChance;
+            }
+            set
+            {
+                crosswayChance=value;
+            }
+        }
         public VertRoad[] UpDownConnected
         {
             get
@@ -77,13 +89,14 @@ namespace CarsGame
         {
             if(lightMode==C.HORGREEN || lightMode==C.VERTGREEN)
             {
-                int r = RandomGen.Rand.Next(C.CrosswayChance);
+                int r = RandomGen.Rand.Next(crosswayChance);
                 if (r == 0)
                 {
                     lightMode = C.BROKENLIGHT;
                 }
                 else lightMode = 1 - lightMode;
             }
+            if (crosswayChance > 1) crosswayChance--;
         }
         public void FixLightDelayed()//бригаду вызвать
         {
@@ -113,15 +126,58 @@ namespace CarsGame
                     return null;
             }
         }
+        public double[] GetStartPosition(int direction)
+        {
+            switch(direction)
+            {
+                case C.RIGHT:
+                    return new double[2] { position[C.X]-C.VehicleSize.Width, position[C.Y] + C.bigDelta };
+                case C.DOWN:
+                    return new double[2] { position[C.X]+C.smallDelta, position[C.Y]-C.VehicleSize.Width };
+                case C.LEFT:
+                    return new double[2] { position[C.X]+size[C.X]+C.VehicleSize.Width, position[C.Y] + C.smallDelta };
+                default:
+                    return new double[2] { position[C.X]+C.bigDelta, position[C.Y] + size[C.X] + C.VehicleSize.Width };
+            }
+        }
+        public double[] GetAfterMiddlePosition(int direction)
+        {
+            switch (direction)
+            {
+                case C.RIGHT:
+                    return new double[2] { position[C.X]+size[C.X]/2, position[C.Y] + C.bigDelta };
+                case C.DOWN:
+                    return new double[2] { position[C.X] + C.smallDelta, position[C.Y]+ size[C.X] / 2 };
+                case C.LEFT:
+                    return new double[2] { position[C.X] +size[C.X]/2, position[C.Y] + C.smallDelta };
+                default:
+                    return new double[2] { position[C.X] + C.bigDelta, position[C.Y] + size[C.X] /2};
+            }
+        }
+        public double[] GetBeforeMiddlePosition(int direction)
+        {
+            switch (direction)
+            {
+                case C.RIGHT:
+                    return new double[2] { position[C.X], position[C.Y] + C.bigDelta };
+                case C.DOWN:
+                    return new double[2] { position[C.X] + C.smallDelta, position[C.Y]};
+                case C.LEFT:
+                    return new double[2] { position[C.X] + size[C.X], position[C.Y] + C.smallDelta };
+                default:
+                    return new double[2] { position[C.X] + C.bigDelta, position[C.Y] + size[C.X] };
+            }
+        }
 
         public Crossway(double x, double y)
         {
             position = new double[2] { x, y };
             size = new double[2];
             turning = new int[3];
-            size[C.X] = C.CrossSize.Width;
-            size[C.Y] = C.CrossSize.Height;
+            size[C.X] = C.ICrossPic.Size.Width;
+            size[C.Y] = C.ICrossPic.Size.Height;
             lightMode = C.HORGREEN;
+            crosswayChance = C.CrosswayChance;
             upDownConnected = new VertRoad[2];
             leftRightConnected = new HorRoad[2];
             changeLight = new Timer(RandomGen.Rand.Next(C.TrafficLightChangeIntervalMin, C.TrafficLightChangeIntervalMax));
