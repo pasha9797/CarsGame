@@ -7,23 +7,23 @@ using System.Threading.Tasks;
 
 namespace CarsGame
 {
-    public class Road
+    public abstract class Road
     {
-        protected double[] position;
-        protected double[] carsStart, carsEnd;
-        protected double[] size;
+        protected PointF position;
+        protected PointF carsStart, carsEnd;
+        protected Size size;
         protected Image picture;
         protected Crossway startCrossway;
         protected Crossway endCrossway;
 
-        public double[] Position
+        public PointF Position
         {
             get
             {
                 return position;
             }
         }
-        public double[] Size
+        public Size Size
         {
             get
             {
@@ -60,62 +60,54 @@ namespace CarsGame
             }
         }
 
-        public double[] GetStartPosition()//поставить машину на начало дороги
+        public PointF GetStartPosition()//позиция перед заездом на начало дороги
         {
-            return new double[2] { carsStart[C.X], carsStart[C.Y] };
+            return carsStart;
         }
-        public double[] GetEndPosition()//поставить машину на конец дороги
+        public PointF GetEndPosition()//позиция перед заездом на конец дороги
         {
-            return new double[2] { carsEnd[C.X], carsEnd[C.Y] };
+            return carsEnd;
         }
-        public double[] GetResumePosition(int beg_end, int direction)//поставить машину на начало дороги
+        public PointF GetResumePosition(int beg_end, Direction direction)//позиция после проезда перекрёстка
         {
-            double[] coords;
-            if (beg_end == 0) coords = new double[2] { carsStart[C.X], carsStart[C.Y] };
-            else coords = new double[2] { carsEnd[C.X], carsEnd[C.Y] };
+            PointF coords;
+            if (beg_end == 0)
+                coords = carsStart;
+            else coords = carsEnd;
             switch (direction)
             {
-                case C.RIGHT:
-                    coords[C.X] += C.VehicleSize.Width;
+                case Direction.RIGHT:
+                    coords.X += C.VehicleSize.Width;
                     break;
-                case C.DOWN:
-                    coords[C.Y] += C.VehicleSize.Width;
+                case Direction.DOWN:
+                    coords.Y += C.VehicleSize.Width;
                     break;
-                case C.LEFT:
-                    coords[C.X] -= C.VehicleSize.Width;
+                case Direction.LEFT:
+                    coords.X -= C.VehicleSize.Width;
                     break;
                 default:
-                    coords[C.Y] -= C.VehicleSize.Width;
+                    coords.Y -= C.VehicleSize.Width;
                         break;
             }
             return coords;
         }
-        public double[] GetEndResumePosition(int direction)//поставить машину на конец дороги
-        {
-            return new double[2] { carsEnd[C.X], carsEnd[C.Y] };
-        }
-
-        public double[] GetNullPosition()//Конец дороги, идущий от края экрана
+        public PointF GetNullPosition()//Конец дороги, идущий от края экрана
         {
             if (this.startCrossway == null)
             {
                 return GetStartPosition();
             }
-            else if (this.endCrossway == null)
+            else
             {
                 return GetEndPosition();
             }
-            else return null;
         }
-        public virtual int GetDirectionToMove(double[] pos)
-        {
-            return -1;
-        }
+        public abstract Direction GetDirectionToMove(PointF pos);//направление движения
 
-        public Road(double x, double y)
+        public Road(float x, float y)
         {
-            position = new double[2] { x, y };
-            size = new double[2];
+            position = new PointF(x, y );
+            size = new Size();
         }
     }
 }

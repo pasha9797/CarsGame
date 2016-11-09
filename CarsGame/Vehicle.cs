@@ -10,30 +10,34 @@ namespace CarsGame
 {
     public abstract class Vehicle
     {
-        protected double[] size;
-        protected double[] position;
-        protected int direction;
+        protected Size size;
+        protected PointF position;
+        protected Direction direction;
         protected Image picture;
-        private int stepsCount;
+        protected int stepsCount;
         protected object curPlacement;
         protected Timer killcar;
-        private bool broken;
+        protected bool broken;
 
-        public double[] Size
+        public Size Size
         {
             get
             {
                 return size;
             }
         }
-        public double[] Position
+        public PointF Position
         {
             get
             {
                 return position;
             }
+            set
+            {
+                position = value;
+            }
         }
-        public int Direction
+        public Direction Direction
         {
             get
             {
@@ -85,7 +89,7 @@ namespace CarsGame
                 {
                     if (curPlacement is Road)
                     {
-                        if (GetCrossway() != null && stepsCount >= StepsToPass())
+                        if (GetCrossway() != null && stepsCount >= StepsToPass()) //пора на перекресток
                         {
                             if (CanWeGo())
                             {
@@ -106,17 +110,17 @@ namespace CarsGame
                         {
                             OneMove();
                         }
-                        if (stepsCount == stepsToPass / 2 && GetTurn() != C.UP)//поворот
+                        if (stepsCount == stepsToPass / 2 && GetTurn() != Turn.STRAIGHT)//поворот
                         {
                             SetTurnDir();
-                            if (GetTurn() == C.RIGHT)
+                            if (GetTurn() == Turn.RIGHT)
                                 position = (curPlacement as Crossway).GetAfterMiddlePosition(direction);
-                            else if (GetTurn() == C.LEFT)
+                            else if (GetTurn() == Turn.LEFT)
                                 position = (curPlacement as Crossway).GetBeforeMiddlePosition(direction);
                         }
-                        if (stepsCount >= stepsToPass)//пора заехать
+                        if (stepsCount >= stepsToPass)//пора на дорогу
                         {
-                            CurPlacement = (curPlacement as Crossway).GetTurnRoad(this);
+                            CurPlacement = (curPlacement as Crossway).ConnectedRoads[(int)direction];
                             stepsCount = 0;
                             position = GetResumeRoadPosition();
                         }
@@ -125,11 +129,17 @@ namespace CarsGame
             }
             else
             {
-                if (curPlacement is Crossway && !(this is Evacuator))
+                if (curPlacement is Crossway)
                 {
-                    if ((curPlacement as Crossway).LightMode == C.BROKENLIGHT ||
-                        (curPlacement as Crossway).LightMode == C.FIXINGLIGHT)
+                    if ((curPlacement as Crossway).LightMode == LightMode.BROKEN ||
+                        (curPlacement as Crossway).LightMode == LightMode.FIXING)
                         BreakVehicle(true);//врезались
+                    else
+                    {
+                        Vehicle v = Field.FindVehicleInPoint(GetFrontPoint(), this);
+                        if (Field.FindVehicleInPoint(v.GetFrontPoint(), v) == this)
+                            BreakVehicle(true);//лобовое столкновение
+                    }
                 }
             }
         }
@@ -151,52 +161,56 @@ namespace CarsGame
 
                 killcar = new Timer(C.KillVehicleDelay);
                 killcar.AutoReset = false;
-                killcar.Elapsed += KillVehicle;
+                killcar.Elapsed += HideByTimer;
                 killcar.Start();
             }
         }
-        public void StopKill()
+        public void StopKill()//остановить таймер на уничтожение машины
         {
             killcar.Stop();
         }
-        public void KillVehicle(Object source, ElapsedEventArgs e)//убрать за границу экрана(машина удалится таймером в Field)
+        public void HideByTimer(Object source, ElapsedEventArgs e)//убрать за границу экрана(машина удалится таймером в Field)
         {
-            position[0] = Program.mainForm.Width * 4;
+            Hide();
+        }
+        public void Hide()//собственно убирание
+        {
+            position.X = Program.mainForm.Width * 4;
         }
         public bool IsVisible()//не скрыта ли машина за экраном
         {
 
-                if (position[C.X] + size[C.X] < 0 || position[C.X] - size[C.X] > Program.mainForm.width || 
-                position[C.Y] + size[C.X] < 0 || position[C.Y] - size[C.X] > Program.mainForm.height)
+                if (position.X + size.Width < 0 || position.X - size.Width > Program.mainForm.width || 
+                position.Y + size.Width < 0 || position.Y - size.Width > Program.mainForm.height)
                 return false;
                 else return true;
 
         }
         protected bool DidWeCrash()//проверка на аварию
         {
-            double[] frontPoint = GetFrontPoint();
+            PointF frontPoint = GetFrontPoint();
             return Field.FindVehicleInPoint(frontPoint, this) != null;
         }
-        public double[] GetFrontPoint()//координата середины переднего бампера
+        public PointF GetFrontPoint()//координата середины переднего бампера
         {
-            double[] frontPoint = new double[2];
+            PointF frontPoint = new PointF();
             switch (direction)
             {
-                case C.UP:
-                    frontPoint[C.X] = position[C.X] + size[C.Y] / 2;
-                    frontPoint[C.Y] = position[C.Y] - size[C.X];
+                case Direction.UP:
+                    frontPoint.X = position.X + size.Height / 2;
+                    frontPoint.Y = position.Y - size.Width;
                     break;
-                case C.DOWN:
-                    frontPoint[C.X] = position[C.X] - size[C.Y] / 2;
-                    frontPoint[C.Y] = position[C.Y] + size[C.X];
+                case Direction.DOWN:
+                    frontPoint.X = position.X - size.Height / 2;
+                    frontPoint.Y = position.Y + size.Width;
                     break;
-                case C.LEFT:
-                    frontPoint[C.X] = position[C.X] - size[C.X];
-                    frontPoint[C.Y] = position[C.Y] - size[C.Y] / 2;
+                case Direction.LEFT:
+                    frontPoint.X = position.X - size.Width;
+                    frontPoint.Y = position.Y - size.Height / 2;
                     break;
-                case C.RIGHT:
-                    frontPoint[C.X] = position[C.X] + size[C.X];
-                    frontPoint[C.Y] = position[C.Y] + size[C.Y] / 2;
+                case Direction.RIGHT:
+                    frontPoint.X = position.X + size.Width;
+                    frontPoint.Y = position.Y + size.Height / 2;
                     break;
             }
             return frontPoint;
@@ -207,11 +221,11 @@ namespace CarsGame
             {
                 switch (GetTurn())
                 {
-                    case C.LEFT:
+                    case Turn.LEFT:
                         return C.StepsToPassCrosswayLeft;
-                    case C.UP:
+                    case Turn.STRAIGHT:
                         return C.StepsToPassCrosswayStraight;
-                    case C.RIGHT:
+                    case Turn.RIGHT:
                         return C.StepsToPassCrosswayRight;
                     default:
                         return 0;
@@ -226,99 +240,134 @@ namespace CarsGame
         }
         private void SetTurnDir()//повернуть машину куда нужно
         {
-            AddTurn(ref direction, GetTurnUnit(GetTurn()));
+            AddTurn(ref direction, GetTurn());
         }
-        protected int GetTurnUnit(int turnDir)// -1 если налево, 0 если прямо, 1 если направо
+        protected void AddTurn(ref Direction direction, Turn turn)//получить конечное положение авто после поворота
         {
-            switch (turnDir)
+            switch(direction)
             {
-                case C.LEFT:
-                    return -1;
-                case C.UP:
-                    return 0;
-                case C.RIGHT:
-                    return 1;
-                default:
-                    return 0;
+                case Direction.RIGHT:
+                    switch(turn)
+                    {
+                        case Turn.RIGHT:
+                            direction = Direction.DOWN;
+                            break;
+                        case Turn.LEFT:
+                            direction = Direction.UP;
+                            break;
+                    }
+                    break;
+                case Direction.DOWN:
+                    switch (turn)
+                    {
+                        case Turn.RIGHT:
+                            direction = Direction.LEFT;
+                            break;
+                        case Turn.LEFT:
+                            direction = Direction.RIGHT;
+                            break;
+                    }
+                    break;
+                case Direction.LEFT:
+                    switch (turn)
+                    {
+                        case Turn.RIGHT:
+                            direction = Direction.UP;
+                            break;
+                        case Turn.LEFT:
+                            direction = Direction.DOWN;
+                            break;
+                    }
+                    break;
+                case Direction.UP:
+                    switch (turn)
+                    {
+                        case Turn.RIGHT:
+                            direction = Direction.RIGHT;
+                            break;
+                        case Turn.LEFT:
+                            direction = Direction.LEFT;
+                            break;
+                    }
+                    break;
             }
         }
-        protected void AddTurn(ref int direction, int turn)//получить конечное положение авто после поворота
-        {
-            direction += turn;
-            if (direction < 0) direction = 4 + direction;
-            direction %= 4;
-        }
-        protected Crossway GetCrossway()
+        protected Crossway GetCrossway()//на какой перекресток свернуть
         {
             Road currentRoad = curPlacement as Road;
             switch (direction)
             {
-                case C.UP:
-                case C.LEFT:
+                case Direction.UP:
+                case Direction.LEFT:
                     return currentRoad.StartCrossway;
-                case C.DOWN:
-                case C.RIGHT:
+                case Direction.DOWN:
+                case Direction.RIGHT:
                     return currentRoad.EndCrossway;
             }
             return null;
         }
-        protected double[] GetResumeRoadPosition()
+        protected PointF GetResumeRoadPosition()//для сьезда с перекрестка на дорогу
         {
             switch (direction)
             {
-                case C.RIGHT:
-                case C.DOWN:
+                case Direction.RIGHT:
+                case Direction.DOWN:
                     return (CurPlacement as Road).GetResumePosition(0, direction);
-                case C.LEFT:
-                case C.UP:
+                case Direction.LEFT:
+                case Direction.UP:
+                default:
                     return (CurPlacement as Road).GetResumePosition(1, direction);
             }
-            return null;
         }
-        protected bool CanWeGo()
+        protected bool CanWeGo()//проверка сигналов светофора
         {
-            int mode = GetCrossway().LightMode;
-            if (mode == C.BROKENLIGHT || mode == C.FIXINGLIGHT)
+            LightMode mode = GetCrossway().LightMode;
+            if (mode == LightMode.BROKEN || mode == LightMode.FIXING)
                 return true;
             switch (direction)
             {
-                case C.UP:
-                case C.DOWN:
-                    return GetCrossway().LightMode == C.VERTGREEN;
-                case C.LEFT:
-                case C.RIGHT:
-                    return GetCrossway().LightMode == C.HORGREEN;
+                case Direction.UP:
+                case Direction.DOWN:
+                    return GetCrossway().LightMode == LightMode.VERTGREEN;
+                case Direction.LEFT:
+                case Direction.RIGHT:
+                    return GetCrossway().LightMode == LightMode.HORGREEN;
             }
             return false;
         }
-        protected void OneMove()
+        protected void OneMove()//один шаг машины
         {
             switch (direction)
             {
-                case C.UP:
+                case Direction.UP:
 
-                    position[C.Y] -= C.VehicleStep;
+                    position.Y -= C.VehicleStep;
                     stepsCount++;
                     break;
-                case C.DOWN:
+                case Direction.DOWN:
 
-                    position[C.Y] += C.VehicleStep;
+                    position.Y += C.VehicleStep;
                     stepsCount++;
                     break;
-                case C.LEFT:
+                case Direction.LEFT:
 
-                    position[C.X] -= C.VehicleStep;
+                    position.X -= C.VehicleStep;
                     stepsCount++;
                     break;
-                case C.RIGHT:
+                case Direction.RIGHT:
 
-                    position[C.X] += C.VehicleStep;
+                    position.X += C.VehicleStep;
                     stepsCount++;
                     break;
             }
         }
-        protected abstract int GetTurn();
-        protected abstract void PictureBroken();
+        public void SetPos(float x, float y)//вручную установить координаты
+        {
+            position.X = x;
+            position.Y = y;
+        }
+        protected abstract Turn GetTurn();//куда поворачивать на перекрестке
+        protected abstract void PictureBroken();//замена текстурки
 
         public Vehicle(Road road)
         {
@@ -328,11 +377,11 @@ namespace CarsGame
                 curPlacement = road;
                 direction = road.GetDirectionToMove(position);
             }
-            size = new double[2];
+            size = new Size();
             stepsCount = -(int)(C.VehicleSize.Width / C.VehicleStep);
             broken = false;
-            this.size[C.X] = C.VehicleSize.Width;
-            this.size[C.Y] = C.VehicleSize.Height;
+            this.size.Width = C.VehicleSize.Width;
+            this.size.Height = C.VehicleSize.Height;
         }
     }
 }

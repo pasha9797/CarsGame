@@ -13,15 +13,14 @@ namespace CarsGame
         {
             picture = C.ICarBrokenPic;
         }
-        protected override int GetTurn()//в какую сторону повернуть на текущем перекрестке
+        protected override Turn GetTurn()//в какую сторону повернуть на текущем перекрестке
         {
-                return (curPlacement as Crossway).Turning[C.CAR];
+                return (curPlacement as Crossway).Turning[(int)VehType.CAR];
         }
 
         public Car(Road road):base(road)
         {
-            picture = C.ICarPic;
-         
+            picture = C.ICarPic;  
         }
     }
 }

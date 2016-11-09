@@ -22,33 +22,34 @@ namespace CarsGame
                 target = value;
             }
         }
+
         protected override void PictureBroken()
         {
             picture = C.IEvacBrokenPic;
         }
-        protected override int GetTurn()
+        protected override Turn GetTurn()
         {
-            return C.UP;
+            return Turn.STRAIGHT;
         }
         public override void Move()
         {       
             if (!Broken)
             {
-                if (!target.IsVisible()) position[C.X] = Program.mainForm.width * 4;
-                if (!DidWeCrash())
+                if (!target.IsVisible())//если машинка удалилась то за ней ехать не надо
+                    Hide();
+                if (!DidWeCrash())//движение
                 {
-                    position[C.Y] += C.VehicleStep*2;
+                    position.Y += C.VehicleStep*2;
                 }
                 else
                 {
-                    if (Field.FindVehicleInPoint(GetFrontPoint(), this).Direction == C.UP && !Field.FindVehicleInPoint(GetFrontPoint(), this).Broken)//лобовое столкновение
+                    if (Field.FindVehicleInPoint(GetFrontPoint(), this).Direction == Direction.UP && !Field.FindVehicleInPoint(GetFrontPoint(), this).Broken)//лобовое столкновение
                         BreakVehicle(true);
                 }
             }
             if (targetReached)//если везём машину
             {
-                    target.Position[C.X] = position[C.X];
-                    target.Position[C.Y] = position[C.Y] - target.Size[C.X] * 0.5;
+                target.SetPos(position.X, position.Y-target.Size.Width * 0.5F);
                 target.Direction = direction;
             }
             else
@@ -60,32 +61,32 @@ namespace CarsGame
                 }
             }
         }
-        private bool IsCloseToTarget()
+        private bool IsCloseToTarget()//подъехал к цели или нет
         {
             bool close=false;
-            if (Math.Abs(position[C.Y] - target.Position[C.Y]) <= size[C.X])
+            if (Math.Abs(position.Y - target.Position.Y) <= size.Width)
                 close = true;
             return close;
         }
-        private void StartCoords()
+        private void StartCoords()//координаты для начала движения
         {
-            position = new double[2];
-            position[C.Y] = -size[C.X];
-            if (target.Direction == C.RIGHT)
-                position[C.X] = target.Position[C.X];
-            else if (target.Direction == C.DOWN)
-                position[C.X] = target.Position[C.X] - target.Size[C.Y];
-            else if (target.Direction == C.LEFT)
-                position[C.X] = target.Position[C.X] - target.Size[C.X];
+            position = new System.Drawing.PointF();
+            position.Y = -size.Width;
+            if (target.Direction == Direction.RIGHT)
+                position.X = target.Position.X;
+            else if (target.Direction == Direction.DOWN)
+                position.X = target.Position.X - target.Size.Height;
+            else if (target.Direction == Direction.LEFT)
+                position.X = target.Position.X - target.Size.Width;
             else
-                position[C.X] = target.Position[C.X];
+                position.X = target.Position.X;
         }
 
         public Evacuator(Vehicle targ) : base(null)
         {
             picture = C.IEvacPic;
-            this.size[C.X] = C.EvacSize.Width;
-            this.size[C.Y] = C.EvacSize.Height;
+            this.size.Width = C.EvacSize.Width;
+            this.size.Height = C.EvacSize.Height;
             this.target = targ;
             StartCoords();
             targetReached = false;

@@ -10,17 +10,19 @@ namespace CarsGame
 {
     public static class Field
     {
+        private static Random rand = new Random();
         private static Road[] roads = new Road[12];
         private static Crossway[] crossways = new Crossway[4];
         private static List<Vehicle> vehicles = new List<Vehicle>();
+        private static List<Road> startingRoads = new List<Road>();
         private static Queue<Evacuator> evacsToCreate = new Queue<Evacuator>();
         private static Timer killtext = new Timer(C.AlertTime);
         private static string message = null;
         private static Brush messageColor;
         private static int stepsForGenerate = 0;
         private static int stepsForChangeHour = 0;
-        private static int score = C.DailyScore;
-        private static int hour = 7;
+        private static int score = C.StartScore;
+        private static int hour = 0;
         private static Font smallFont = new Font("Tahoma", 12);
         private static Font bigFont = new Font("Tahoma", 48);
         private static Brush infoBrush = Brushes.Blue;
@@ -30,7 +32,8 @@ namespace CarsGame
         private static float gameoverStartX = Program.mainForm.width / 2 - (C.gameoverWidth / 2);
         private static float gameoverStartY = Program.mainForm.height / 2 - (C.gameoverHeight / 2);
         private static bool gameOver = false;
-        static Brush brush = Brushes.Green;
+        private static Brush brush = Brushes.Green;
+        private static System.Media.SoundPlayer player = new System.Media.SoundPlayer();
 
         public static int Score
         {
@@ -43,31 +46,39 @@ namespace CarsGame
                 score = value;
             }
         }
-
-        public static void CreateRoadsAndCrossways()//генерация поля и запуск игры
+        public static Random Rand
         {
+            get
+            {
+                return rand;
+            }
+        }
+
+        public static void Initialize()//генерация поля и запуск игры
+        {
+            //горизонтальные дороги
             roads[0] = new HorRoad(0, C.IVertRoadPic.Size.Height);
             roads[1] = new HorRoad(C.IHorRoadPic.Size.Width + C.ICrossPic.Size.Width, C.IVertRoadPic.Size.Height);
             roads[2] = new HorRoad((C.IHorRoadPic.Size.Width + C.ICrossPic.Size.Width) * 2, C.IVertRoadPic.Size.Height);
-
             roads[3] = new HorRoad(0, C.IHorRoadPic.Size.Height + C.IVertRoadPic.Size.Height * 2);
             roads[4] = new HorRoad(C.IHorRoadPic.Size.Width + C.ICrossPic.Size.Width, C.IHorRoadPic.Size.Height + C.IVertRoadPic.Size.Height * 2);
             roads[5] = new HorRoad((C.IHorRoadPic.Size.Width + C.ICrossPic.Size.Width) * 2, C.IHorRoadPic.Size.Height + C.IVertRoadPic.Size.Height * 2);
 
+            //вертикальные дороги
             roads[6] = new VertRoad(C.IHorRoadPic.Size.Width, 0);
             roads[7] = new VertRoad(C.IHorRoadPic.Size.Width * 2 + C.ICrossPic.Size.Width, 0);
-
             roads[8] = new VertRoad(C.IHorRoadPic.Size.Width, C.IVertRoadPic.Size.Height + C.ICrossPic.Size.Height);
             roads[9] = new VertRoad(C.IHorRoadPic.Size.Width * 2 + C.ICrossPic.Size.Width, C.IVertRoadPic.Size.Height + C.ICrossPic.Size.Height);
-
             roads[10] = new VertRoad(C.IHorRoadPic.Size.Width, (C.IVertRoadPic.Size.Height + C.ICrossPic.Size.Height) * 2);
             roads[11] = new VertRoad(C.IHorRoadPic.Size.Width * 2 + C.ICrossPic.Size.Width, (C.IVertRoadPic.Size.Height + C.ICrossPic.Size.Height) * 2);
 
+            //перекрёстки
             crossways[0] = new Crossway(C.IHorRoadPic.Size.Width, C.IVertRoadPic.Size.Height);
             crossways[1] = new Crossway(C.IHorRoadPic.Size.Width * 2 + C.ICrossPic.Size.Width, C.IVertRoadPic.Size.Height);
             crossways[2] = new Crossway(C.IHorRoadPic.Size.Width, C.IVertRoadPic.Size.Height * 2 + C.ICrossPic.Size.Height);
             crossways[3] = new Crossway(C.IHorRoadPic.Size.Width * 2 + C.ICrossPic.Size.Width, C.IVertRoadPic.Size.Height * 2 + C.ICrossPic.Size.Height);
 
+            //прописываем какими перекрестками начинается и заканчивается каждая дорога
             roads[0].StartCrossway = null; roads[0].EndCrossway = crossways[0];
             roads[1].StartCrossway = crossways[0]; roads[1].EndCrossway = crossways[1];
             roads[2].StartCrossway = crossways[1]; roads[2].EndCrossway = null;
@@ -81,48 +92,47 @@ namespace CarsGame
             roads[10].StartCrossway = crossways[2]; roads[10].EndCrossway = null;
             roads[11].StartCrossway = crossways[3]; roads[11].EndCrossway = null;
 
-            crossways[0].UpDownConnected[0] = roads[6] as VertRoad;
-            crossways[0].UpDownConnected[1] = roads[8] as VertRoad;
-            crossways[0].LeftRightConnected[0] = roads[0] as HorRoad;
-            crossways[0].LeftRightConnected[1] = roads[1] as HorRoad;
+            //список дорог, которые начинаются с краю экрана
+            startingRoads.Add(roads[0]);
+            startingRoads.Add(roads[2]);
+            startingRoads.Add(roads[3]);
+            startingRoads.Add(roads[5]);
+            startingRoads.Add(roads[6]);
+            startingRoads.Add(roads[7]);
+            startingRoads.Add(roads[10]);
+            startingRoads.Add(roads[11]);
 
-            crossways[1].UpDownConnected[0] = roads[7] as VertRoad;
-            crossways[1].UpDownConnected[1] = roads[9] as VertRoad;
-            crossways[1].LeftRightConnected[0] = roads[1] as HorRoad;
-            crossways[1].LeftRightConnected[1] = roads[2] as HorRoad;
+            //прописываем какие дороги примыкают к каждому перекрестку
+            crossways[0].ConnectedRoads[(int)Direction.UP] = roads[6] as VertRoad;
+            crossways[0].ConnectedRoads[(int)Direction.DOWN] = roads[8] as VertRoad;
+            crossways[0].ConnectedRoads[(int)Direction.LEFT] = roads[0] as HorRoad;
+            crossways[0].ConnectedRoads[(int)Direction.RIGHT] = roads[1] as HorRoad;
+            crossways[1].ConnectedRoads[(int)Direction.UP] = roads[7] as VertRoad;
+            crossways[1].ConnectedRoads[(int)Direction.DOWN] = roads[9] as VertRoad;
+            crossways[1].ConnectedRoads[(int)Direction.LEFT] = roads[1] as HorRoad;
+            crossways[1].ConnectedRoads[(int)Direction.RIGHT] = roads[2] as HorRoad;
+            crossways[2].ConnectedRoads[(int)Direction.UP] = roads[8] as VertRoad;
+            crossways[2].ConnectedRoads[(int)Direction.DOWN] = roads[10] as VertRoad;
+            crossways[2].ConnectedRoads[(int)Direction.LEFT] = roads[3] as HorRoad;
+            crossways[2].ConnectedRoads[(int)Direction.RIGHT] = roads[4] as HorRoad;
+            crossways[3].ConnectedRoads[(int)Direction.UP] = roads[9] as VertRoad;
+            crossways[3].ConnectedRoads[(int)Direction.DOWN] = roads[11] as VertRoad;
+            crossways[3].ConnectedRoads[(int)Direction.LEFT] = roads[4] as HorRoad;
+            crossways[3].ConnectedRoads[(int)Direction.RIGHT] = roads[5] as HorRoad;
 
-            crossways[2].UpDownConnected[0] = roads[8] as VertRoad;
-            crossways[2].UpDownConnected[1] = roads[10] as VertRoad;
-            crossways[2].LeftRightConnected[0] = roads[3] as HorRoad;
-            crossways[2].LeftRightConnected[1] = roads[4] as HorRoad;
-
-            crossways[3].UpDownConnected[0] = roads[9] as VertRoad;
-            crossways[3].UpDownConnected[1] = roads[11] as VertRoad;
-            crossways[3].LeftRightConnected[0] = roads[4] as HorRoad;
-            crossways[3].LeftRightConnected[1] = roads[5] as HorRoad;
-
-            crossways[0].Turning[C.CAR] = C.LEFT;
-            crossways[0].Turning[C.TRUCK] = C.UP;
-            crossways[0].Turning[C.BUS] = C.RIGHT;
-
-            crossways[1].Turning[C.CAR] = C.LEFT;
-            crossways[1].Turning[C.TRUCK] = C.RIGHT;
-            crossways[1].Turning[C.BUS] = C.UP;
-
-            crossways[2].Turning[C.CAR] = C.UP;
-            crossways[2].Turning[C.TRUCK] = C.LEFT;
-            crossways[2].Turning[C.BUS] = C.RIGHT;
-
-            crossways[3].Turning[C.CAR] = C.RIGHT;
-            crossways[3].Turning[C.TRUCK] = C.UP;
-            crossways[3].Turning[C.BUS] = C.LEFT;
-            /*for(int i=0;i<=3;i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    crossways[i].Turning[j] = C.LEFT;
-                }
-            }*/
+            //правила поворота машин на перекрестках
+            crossways[0].Turning[(int)VehType.CAR] = Turn.LEFT;
+            crossways[0].Turning[(int)VehType.TRUCK] = Turn.STRAIGHT;
+            crossways[0].Turning[(int)VehType.BUS] = Turn.RIGHT;
+            crossways[1].Turning[(int)VehType.CAR] = Turn.LEFT;
+            crossways[1].Turning[(int)VehType.TRUCK] = Turn.RIGHT;
+            crossways[1].Turning[(int)VehType.BUS] = Turn.STRAIGHT;
+            crossways[2].Turning[(int)VehType.CAR] = Turn.STRAIGHT;
+            crossways[2].Turning[(int)VehType.TRUCK] = Turn.LEFT;
+            crossways[2].Turning[(int)VehType.BUS] = Turn.RIGHT;
+            crossways[3].Turning[(int)VehType.CAR] = Turn.RIGHT;
+            crossways[3].Turning[(int)VehType.TRUCK] = Turn.STRAIGHT;
+            crossways[3].Turning[(int)VehType.BUS] = Turn.LEFT;
 
             killtext.AutoReset = false;
             killtext.Elapsed += KillText;
@@ -136,18 +146,19 @@ namespace CarsGame
                 if (!vehicles[i].IsVisible())
                 {
                     if (vehicles[i] is Evacuator)
-                        (vehicles[i] as Evacuator).Target.Position[C.X]= Program.mainForm.Width * 4;
+                        (vehicles[i] as Evacuator).Target.Hide();
+                    else if (!vehicles[i].Broken)
+                        score += C.SuccessVehicleScore;
                     vehicles.RemoveAt(i);
                 }
                 else i++;
             }
 
             //генерация новых
-            int[] startingRoads = new int[8] { 0, 2, 3, 5, 6, 7, 10, 11 };
-            int whereToCreate = RandomGen.Rand.Next(8);
-            int roadID = startingRoads[whereToCreate];
-            int vType = RandomGen.Rand.Next(3);
-            Vehicle v = CreateVehicle(vType, roads[roadID]);
+            int whereToCreate = Rand.Next(8);
+            Road road = startingRoads[whereToCreate];
+            int vType = Rand.Next(3);
+            Vehicle v = CreateVehicle((VehType)vType, road);
             if (FindVehicleInPoint(v.GetFrontPoint(), v) == null)
             {
                 vehicles.Add(v);
@@ -162,30 +173,30 @@ namespace CarsGame
                 }
             }
         }
-        private static Vehicle CreateVehicle(int vType, Road road)
+        private static Vehicle CreateVehicle(VehType vType, Road road)//Создать авто
         {
-            Vehicle v;
+            Vehicle v = null;
             switch (vType)
             {
-                case C.CAR:
+                case VehType.CAR:
                     v = new Car(road);
                     break;
-                case C.TRUCK:
+                case VehType.TRUCK:
                     v = new Truck(road);
                     break;
-                default:
+                case VehType.BUS:
                     v = new Bus(road);
                     break;
             }
             return v;
         }
-        public static void CallEvacuator(Vehicle target)
+        public static void CallEvacuator(Vehicle target)//заспавнить эвакуатор
         {
-            Evacuator v = new Evacuator(target);           
-            v.Direction = C.DOWN;
+            Evacuator v = new Evacuator(target);
+            v.Direction = Direction.DOWN;
             evacsToCreate.Enqueue(v);
         }
-        public static Vehicle FindVehicleInPoint(double[] pos, Vehicle current)//поиск машины в точке
+        public static Vehicle FindVehicleInPoint(PointF pos, Vehicle current)//поиск машины в точке
         {
             Vehicle veh = null;
             bool check = false;
@@ -197,21 +208,21 @@ namespace CarsGame
                 {
                     switch (veh.Direction)
                     {
-                        case C.UP:
-                            check = (InBounds(pos[C.X], veh.Position[C.X], veh.Position[C.X] + veh.Size[C.Y])) &&
-                                (InBounds(pos[C.Y], veh.Position[C.Y], veh.Position[C.Y] - veh.Size[C.X]));
+                        case Direction.UP:
+                            check = (InBounds(pos.X, veh.Position.X, veh.Position.X + veh.Size.Height)) &&
+                                (InBounds(pos.Y, veh.Position.Y, veh.Position.Y - veh.Size.Width));
                             break;
-                        case C.DOWN:
-                            check = (InBounds(pos[C.X], veh.Position[C.X], veh.Position[C.X] - veh.Size[C.Y])) &&
-                                 (InBounds(pos[C.Y], veh.Position[C.Y], veh.Position[C.Y] + veh.Size[C.X]));
+                        case Direction.DOWN:
+                            check = (InBounds(pos.X, veh.Position.X, veh.Position.X - veh.Size.Height)) &&
+                                 (InBounds(pos.Y, veh.Position.Y, veh.Position.Y + veh.Size.Width));
                             break;
-                        case C.LEFT:
-                            check = (InBounds(pos[C.X], veh.Position[C.X], veh.Position[C.X] - veh.Size[C.X])) &&
-                                     (InBounds(pos[C.Y], veh.Position[C.Y], veh.Position[C.Y] - veh.Size[C.Y]));
+                        case Direction.LEFT:
+                            check = (InBounds(pos.X, veh.Position.X, veh.Position.X - veh.Size.Width)) &&
+                                     (InBounds(pos.Y, veh.Position.Y, veh.Position.Y - veh.Size.Height));
                             break;
-                        case C.RIGHT:
-                            check = (InBounds(pos[C.X], veh.Position[C.X], veh.Position[C.X] + veh.Size[C.X])) &&
-                                       (InBounds(pos[C.Y], veh.Position[C.Y], veh.Position[C.Y] + veh.Size[C.Y]));
+                        case Direction.RIGHT:
+                            check = (InBounds(pos.X, veh.Position.X, veh.Position.X + veh.Size.Width)) &&
+                                       (InBounds(pos.Y, veh.Position.Y, veh.Position.Y + veh.Size.Height));
                             break;
                     }
                 }
@@ -220,20 +231,20 @@ namespace CarsGame
             if (check) return veh;
             else return null;
         }
-        public static bool InBounds(double point, double first, double second)// point принадл [first, second]
+        public static bool InBounds(float point, float first, float second)// point принадл [first, second]
         {
             return ((point >= first && point <= second) || (point >= second && point <= first));
         }
-        public static void CheckFixLight(double x, double y)//кликнул ли по светофору
+        public static void CheckFixLight(float x, float y)//кликнул ли по светофору
         {
             int i = 0;
             bool found = false;
             while (i < crossways.Count() && !found)
             {
-                if (x <= crossways[i].Position[C.X] && x >= crossways[i].Position[C.X] - C.IHorGreenPic.Size.Width
-                    && y <= crossways[i].Position[C.Y] && y >= crossways[i].Position[C.Y] - C.IHorGreenPic.Size.Height)
+                if (x <= crossways[i].Position.X && x >= crossways[i].Position.X - C.IHorGreenPic.Size.Width
+                    && y <= crossways[i].Position.Y && y >= crossways[i].Position.Y - C.IHorGreenPic.Size.Height)
                 {
-                    if (crossways[i].LightMode == C.BROKENLIGHT)
+                    if (crossways[i].LightMode == LightMode.BROKEN)
                     {
                         PlaySound(C.FixSound);
                         Alert("Ремонтная бригада спешит на вызов!", Brushes.Green);
@@ -273,95 +284,98 @@ namespace CarsGame
 
             //Смена часа
             stepsForChangeHour++;
-            if (stepsForChangeHour >= C.DayTime / C.UpdateInterval)
+            if (stepsForChangeHour >= C.DayLength / C.UpdateInterval)
             {
                 hour++;
-
-                if (hour == 24)
-                {
-                    hour = 0;
-                    score += C.DailyScore;
-                }
                 stepsForChangeHour = 0;
             }
+            //игра окончена
             if (score <= 0)
             {
-                //Program.mainForm.updateState.Stop();
-                //gameOver = true;
+                Program.mainForm.updateState.Stop();
+                gameOver = true;
             }
         }
-        public static void LightsInspection()
+        public static void LightsInspection()//тех осмотр светофоров
         {
-            for (int i = 0; i < crossways.Count(); i++)
-                crossways[i].CrosswayChance = C.CrosswayChance;
-            Alert("Технический осмотр светофоров успешно проведён!", Brushes.Green);
+            if (score < C.InspectionScore)
+                Alert("Вы должны иметь " + C.InspectionScore + " очков!", Brushes.Red);
+            else
+            {
+                for (int i = 0; i < crossways.Count(); i++)
+                {
+                    crossways[i].CrosswayChance = C.CrosswayChance;
+                    if (crossways[i].LightMode == LightMode.BROKEN) crossways[i].FixLightDelayed();
+                }
+                score -= C.InspectionScore;
+                Alert("Тех. осмотр проведён!", Brushes.Green);
+            }
+        }
+        private static Image TurnImage(int crossID, VehType vType)//определить значок поворота
+        {
+            switch (crossways[crossID].Turning[(int)vType])
+            {
+                case Turn.RIGHT:
+                    return C.ITurnRightPic;
+                case Turn.LEFT:
+                    return C.ITurnLeftPic;
+                default:
+                    return C.ITurnStraightPic;
+            }
         }
         public static void PlaySound(string path)//звук
         {
-            System.Media.SoundPlayer player = new System.Media.SoundPlayer();
             player.SoundLocation = path;
             player.Load();
             player.Play();
         }
         public static void Draw(Graphics g)//обновление экрана
         {
-            g.Clear(Color.White);
             g.DrawImage(C.IFieldPic, 0, 0);
             for (int i = 0; i < C.RoadsNumber; i++)
             {
-                g.DrawImage(roads[i].Picture, (float)roads[i].Position[C.X], (float)roads[i].Position[C.Y]);
+                g.DrawImage(roads[i].Picture, roads[i].Position.X, roads[i].Position.Y);
             }
             for (int i = 0; i < C.CrosswaysNumber; i++)
             {
-                g.DrawImage(C.ICrossPic, (float)crossways[i].Position[C.X], (float)crossways[i].Position[C.Y]);
-                if (crossways[i].LightMode == C.HORGREEN)
-                {
-                    g.DrawImage(C.IHorGreenPic, (float)crossways[i].Position[C.X] - C.IHorGreenPic.Size.Width, (float)crossways[i].Position[C.Y] - C.IHorGreenPic.Size.Height);
-                }
-                else if (crossways[i].LightMode == C.VERTGREEN)
-                {
-                    g.DrawImage(C.IVertGreenPic, (float)crossways[i].Position[C.X] - C.IHorGreenPic.Size.Width, (float)crossways[i].Position[C.Y] - C.IHorGreenPic.Size.Height);
-                }
-                else if (crossways[i].LightMode == C.BROKENLIGHT)
-                {
-                    g.DrawImage(C.IBrokenLightPic, (float)crossways[i].Position[C.X] - C.IHorGreenPic.Size.Width, (float)crossways[i].Position[C.Y] - C.IHorGreenPic.Size.Height);
-                }
-                else
-                {
-                    g.DrawImage(C.IFixingLightPic, (float)crossways[i].Position[C.X] - C.IHorGreenPic.Size.Width, (float)crossways[i].Position[C.Y] - C.IHorGreenPic.Size.Height);
-                }
+                g.DrawImage(C.ICrossPic, (float)crossways[i].Position.X, (float)crossways[i].Position.Y);
+                g.DrawImage(crossways[i].LightImage, (float)crossways[i].Position.X - C.IHorGreenPic.Size.Width, (float)crossways[i].Position.Y - C.IHorGreenPic.Size.Height);
+
+                g.DrawImage(C.ICrossInfoPic, (float)crossways[i].Position.X + C.ICrossPic.Size.Width, (float)crossways[i].Position.Y - C.ICrossInfoPic.Size.Height * 2);
+                g.DrawImage(TurnImage(i, VehType.CAR), (float)crossways[i].Position.X + C.ICrossPic.Size.Width, (float)crossways[i].Position.Y - C.ICrossInfoPic.Size.Height);
+                g.DrawImage(TurnImage(i, VehType.TRUCK), (float)crossways[i].Position.X + C.ICrossPic.Size.Width + (C.ICrossInfoPic.Size.Width - C.ITurnRightPic.Size.Width) / 2, (float)crossways[i].Position.Y - C.ICrossInfoPic.Size.Height);
+                g.DrawImage(TurnImage(i, VehType.BUS), (float)crossways[i].Position.X + C.ICrossPic.Size.Width + (C.ICrossInfoPic.Size.Width - C.ITurnRightPic.Size.Width), (float)crossways[i].Position.Y - C.ICrossInfoPic.Size.Height);
             }
-            for(int i=vehicles.Count-1; i>=0;i--)
+            for (int i = 0; i < vehicles.Count; i++)
             {
                 Vehicle vehicle = vehicles[i];
-
                 if (vehicle.CurPlacement is Road) brush = Brushes.Red;
                 else if (vehicle.CurPlacement is Crossway) brush = Brushes.Blue;
                 else brush = Brushes.Green;
-                g.FillRectangle(brush, (float)vehicle.Position[C.X], (float)vehicle.Position[C.Y], 10, 10);
-                g.TranslateTransform((float)vehicle.Position[C.X], (float)vehicle.Position[C.Y]);
+                //g.FillRectangle(brush, (float)vehicle.Position.X, (float)vehicle.Position.Y, 10, 10);
+                g.TranslateTransform((float)vehicle.Position.X, (float)vehicle.Position.Y);
                 switch (vehicle.Direction)
                 {
-                    case C.UP:
+                    case Direction.UP:
                         g.RotateTransform(-90);
                         g.DrawImage(vehicle.Picture, 0, 0);
                         break;
-                    case C.DOWN:
+                    case Direction.DOWN:
                         g.RotateTransform(90);
                         g.DrawImage(vehicle.Picture, 0, 0);
                         break;
-                    case C.LEFT:
+                    case Direction.LEFT:
                         g.RotateTransform(180);
                         g.DrawImage(vehicle.Picture, 0, 0);
                         break;
-                    case C.RIGHT:
+                    case Direction.RIGHT:
                         g.DrawImage(vehicle.Picture, 0, 0);
                         break;
                 }
                 g.ResetTransform();
             }
             g.FillRectangle(Brushes.White, mainInfoStart, 5, C.mainInfoWidth, C.mainInfoHeight);
-            g.DrawString("Время: " + hour + ":00", smallFont, infoBrush, mainInfoStart + 3, 6);
+            g.DrawString("Время: " + (hour % 24) + ":00", smallFont, infoBrush, mainInfoStart + 3, 6);
             g.DrawString("Счёт: " + score, smallFont, infoBrush, mainInfoStart + 3, 6 + linestep);
             g.DrawString("Количество машин: " + vehicles.Count, smallFont, infoBrush, mainInfoStart + 3, 6 + 2 * linestep);
             if (message != null)
@@ -370,7 +384,8 @@ namespace CarsGame
             if (gameOver)
             {
                 g.FillRectangle(Brushes.LightYellow, gameoverStartX, gameoverStartY, C.gameoverWidth, C.gameoverHeight);
-                g.DrawString("Игра окончена!", bigFont, gameoverBrush, gameoverStartX + 3, gameoverStartY + C.gameoverHeight / 3);
+                g.DrawString("Игра окончена!", bigFont, gameoverBrush, gameoverStartX + 2, gameoverStartY + C.gameoverHeight / 3);
+                g.DrawString("Вы играли " + hour + " часов.", smallFont, gameoverBrush, gameoverStartX + 2, gameoverStartY + C.gameoverHeight / 3 + 100);
             }
         }
     }

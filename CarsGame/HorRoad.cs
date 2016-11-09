@@ -9,30 +9,25 @@ namespace CarsGame
 {
     public class HorRoad:Road
     {
-        public override int GetDirectionToMove(double[] pos)//куда ехать в зависимости от положения
+        public override Direction GetDirectionToMove(PointF pos)//куда ехать в зависимости от положения
         {
-            if (pos[C.X] == carsStart[C.X] && pos[C.Y] == carsStart[C.Y])
+            if (pos.X == carsStart.X && pos.Y == carsStart.Y)
             {
-                return C.RIGHT;
+                return Direction.RIGHT;
             }
-            else if (pos[C.X] == carsEnd[C.X] && pos[C.Y] == carsEnd[C.Y])
+            else
             {
-                return C.LEFT;
+                return Direction.LEFT;
             }
-            else return -1;
         }
 
-        public HorRoad(double x, double y):base(x,y)
+        public HorRoad(float x, float y):base(x,y)
         {
             picture = C.IHorRoadPic;
-            this.size[C.X] = C.IHorRoadPic.Size.Width;
-            this.size[C.Y] = C.IHorRoadPic.Size.Height;
-            carsStart = new double[2];
-            carsEnd = new double[2];
-            carsStart[C.X] = position[C.X] - C.VehicleSize.Width;
-            carsStart[C.Y] = position[C.Y] + C.bigDelta;
-            carsEnd[C.X] = position[C.X] + C.IHorRoadPic.Size.Width + C.VehicleSize.Width;
-            carsEnd[C.Y] = position[C.Y] + C.smallDelta;
+            this.size.Width = C.IHorRoadPic.Size.Width;
+            this.size.Height = C.IHorRoadPic.Size.Height;
+            carsStart = new PointF(position.X - C.VehicleSize.Width, position.Y + C.bigDelta);
+            carsEnd = new PointF(position.X + C.IHorRoadPic.Size.Width + C.VehicleSize.Width, position.Y + C.smallDelta);
         }
     }
 }

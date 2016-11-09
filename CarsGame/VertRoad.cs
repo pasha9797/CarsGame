@@ -9,30 +9,25 @@ namespace CarsGame
 {
     public class VertRoad:Road
     {
-        public override int GetDirectionToMove(double[] pos)
+        public override Direction GetDirectionToMove(PointF pos)
         {
-            if (pos[C.X] == carsStart[C.X] && pos[C.Y] == carsStart[C.Y])
+            if (pos.X == carsStart.X && pos.Y == carsStart.Y)
             {
-                return C.DOWN;
+                return Direction.DOWN;
             }
-            else if (pos[C.X] == carsEnd[C.X] && pos[C.Y] == carsEnd[C.Y])
+            else
             {
-                return C.UP;
+                return Direction.UP;
             }
-            else return -1;
         }
 
-        public VertRoad(double x,double y):base(x,y)
+        public VertRoad(float x,float y):base(x,y)
         {
             picture = C.IVertRoadPic;
-            this.size[C.X] = C.IVertRoadPic.Size.Width;
-            this.size[C.Y] = C.IVertRoadPic.Size.Height;
-            carsStart = new double[2];
-            carsEnd = new double[2];
-            carsStart[C.X] = position[C.X] + C.smallDelta;
-            carsStart[C.Y] = position[C.Y] - C.VehicleSize.Width;
-            carsEnd[C.X] = position[C.X] + C.bigDelta;
-            carsEnd[C.Y] = position[C.Y] + C.IVertRoadPic.Size.Height + C.VehicleSize.Width;
+            this.size.Width = C.IVertRoadPic.Size.Width;
+            this.size.Height = C.IVertRoadPic.Size.Height;
+            carsStart = new PointF(position.X + C.smallDelta, position.Y - C.VehicleSize.Width);
+            carsEnd = new PointF(position.X + C.bigDelta, position.Y + C.IVertRoadPic.Size.Height + C.VehicleSize.Width);
         }
     }
 }

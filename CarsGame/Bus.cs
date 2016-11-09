@@ -13,9 +13,9 @@ namespace CarsGame
         {
             picture = C.IBusBrokenPic;
         }
-        protected override int GetTurn()
+        protected override Turn GetTurn()
         {
-            return (curPlacement as Crossway).Turning[C.BUS];
+            return (curPlacement as Crossway).Turning[(int)VehType.BUS];
         }
 
         public Bus(Road road) : base(road)

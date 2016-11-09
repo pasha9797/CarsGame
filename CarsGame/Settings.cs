@@ -7,6 +7,34 @@ using System.Drawing;
 
 namespace CarsGame
 {
+    public enum Direction
+    {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT
+    }
+    public enum Turn
+    {
+        STRAIGHT = 0,
+        RIGHT = 1,
+        LEFT = -1
+    }
+    public enum LightMode
+    {
+        HORGREEN,
+        VERTGREEN,
+        BROKEN,
+        FIXING
+    }
+    public enum VehType
+    {
+        CAR,
+        TRUCK,
+        BUS,
+        EVAC
+    }
+
     public static class C
     {
         //*** Каталог файлов ***
@@ -32,25 +60,31 @@ namespace CarsGame
         public static Image IHorGreenPic = Image.FromFile(Root + "horgreen.png");
         public static Image IVertGreenPic = Image.FromFile(Root + "VertGreen.png");
         public static Image IBrokenLightPic = Image.FromFile(Root + "brokenlight.png");
-        public static Image IFixingLightPic = Image.FromFile(Root + "fixinglight.png");
+        public static Image IFixingPic = Image.FromFile(Root + "fixinglight.png");
+        public static Image ICrossInfoPic = Image.FromFile(Root + "crossinfo.png");
+        public static Image ITurnRightPic = Image.FromFile(Root + "turnright.png");
+        public static Image ITurnLeftPic = Image.FromFile(Root + "turnleft.png");
+        public static Image ITurnStraightPic = Image.FromFile(Root + "turnup.png");
 
         //*** Размеры машин ***
         public static Size VehicleSize = ICarPic.Size;
         public static Size EvacSize = IEvacPic.Size;
 
         //*** Настраиваемые величины  ***
-        public static int UpdateInterval = 50; //интервал передвижения и перерисовки
+        public static int UpdateInterval = 100; //интервал передвижения и перерисовки
         public static int CreateVehiclesInterval = 2000; //интервал создания новых машин
-        public static int DayTime = 1000; //длительность одного часа
-        public static int TrafficLightChangeIntervalMax = 8000; //максимальное время между переключениями режимов светофора
-        public static int TrafficLightChangeIntervalMin = 5000; //минимальное такое время
+        public static int DayLength = 1000; //длительность одного часа
+        public static int ChangeLightMax = 8000; //максимальное время между переключениями режимов светофора
+        public static int ChangeLightMin = 5000; //минимальное такое время
         public static int AlertTime = 2000; //длительность отображения уведомления
         public static int FixLightDelay = 4500; //за сколько будет починен светофор
         public static int KillVehicleDelay = 20000; //через сколько будет удалена машина если за ней не приедет эвакуатор
-        public static int VehicleStep = 5; //на сколько пикселей сдвинется машина за 1 шаг
-        public static int CrosswayChance = 20; //число, обратное шансу поломки светофора
-        public static int DailyScore = 350; //количество очков начисляемых каждые сутки
-        public static int CrashScore = 115; //сколько очков снимается за разбитую машину
+        public static int VehicleStep = 10; //на сколько пикселей сдвинется машина за 1 шаг
+        public static int CrosswayChance = 15; //число, обратное шансу поломки светофора
+        public static int StartScore = 450; //количество очков начисляемых каждые сутки
+        public static int SuccessVehicleScore = 35;
+        public static int CrashScore = 95; //сколько очков снимается за разбитую машину
+        public static int InspectionScore = 500; //количество очков для тех.осмотра светофоров
         public static int mainInfoWidth = 300; //ширина основного информационного поля
         public static int mainInfoHeight = 110; //его высота
         public static int gameoverWidth = 480; //ширина уведомления о конце игры
@@ -64,29 +98,7 @@ namespace CarsGame
         public static int StepsToPassCrosswayStraight = (int)((ICrossPic.Size.Height + VehicleSize.Width) / VehicleStep);
         public static int StepsToPassCrosswayRight = (int)(ICrossPic.Size.Height / VehicleStep);
         public static int StepsToPassCrosswayLeft = (int)(ICrossPic.Size.Height / VehicleStep * 2);
-        public static double bigDelta = (C.IHorRoadPic.Size.Height * 1.5 - C.VehicleSize.Height) / 2;
-        public static double smallDelta = (C.IHorRoadPic.Size.Height / 2 + C.VehicleSize.Height) / 2;
-
-        //*** Обозначения ***
-        public const int UP = 0;
-        public const int RIGHT = 1;
-        public const int DOWN = 2;
-        public const int LEFT = 3;
-
-        public const int CAR = 0;
-        public const int TRUCK = 1;
-        public const int BUS = 2;
-        public const int EVAC = 3;
-
-        public static int X = 0;
-        public static int Y = 1;
-
-        public static int ONROAD = 0;
-        public static int ONCROSSWAY = 1;
-
-        public static int HORGREEN = 0;
-        public static int VERTGREEN = 1;
-        public static int BROKENLIGHT = 2;
-        public static int FIXINGLIGHT = 3;
+        public static float bigDelta = (C.IHorRoadPic.Size.Height * 1.5F - C.VehicleSize.Height) / 2;
+        public static float smallDelta = (C.IHorRoadPic.Size.Height / 2 + C.VehicleSize.Height) / 2;
     }
 }

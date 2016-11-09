@@ -10,37 +10,44 @@ namespace CarsGame
 {
     public class Crossway
     {
-        private double[] position;
-        private double[] size;
-        private int lightMode;
-        private VertRoad[] upDownConnected;
-        private HorRoad[] leftRightConnected;
+        private PointF position;
+        private Size size;
+        private LightMode lightMode;
+        private Road[] connectedRoads;
         private Timer changeLight;
-        private int[] turning;
+        private Turn[] turning;
         private int crosswayChance;
+        private Image lightImage;
 
-        public double[] Position
+        public PointF Position
         {
             get
             {
                 return position;
             }
         }
-        public double[] Size
+        public Image LightImage
+        {
+            get
+            {
+                return lightImage;
+            }
+        }
+        public Size Size
         {
             get
             {
                 return size;
             }
         }
-        public int[] Turning
+        public Turn[] Turning
         {
             get
             {
                 return turning;
             }
         }
-        public int LightMode
+        public LightMode LightMode
         {
             get
             {
@@ -48,7 +55,7 @@ namespace CarsGame
             }
             set
             {
-                if (value >= 0 && value <= 2) lightMode = value;
+                lightMode = value;
             }
         }
         public int CrosswayChance
@@ -62,45 +69,40 @@ namespace CarsGame
                 crosswayChance=value;
             }
         }
-        public VertRoad[] UpDownConnected
+        public Road[] ConnectedRoads
         {
             get
             {
-                return upDownConnected;
+                return connectedRoads;
             }
             set
             {
-                upDownConnected = value;
-            }
-        }
-        public HorRoad[] LeftRightConnected
-        {
-            get
-            {
-                return leftRightConnected;
-            }
-            set
-            {
-                leftRightConnected = value;
+                connectedRoads = value;
             }
         }
 
         public void ChangeLightMode(Object source, ElapsedEventArgs e)//меняем сигнал
         {
-            if(lightMode==C.HORGREEN || lightMode==C.VERTGREEN)
+            if(lightMode==LightMode.HORGREEN || lightMode==LightMode.VERTGREEN)
             {
-                int r = RandomGen.Rand.Next(crosswayChance);
+                int r = Field.Rand.Next(crosswayChance);
                 if (r == 0)
                 {
-                    lightMode = C.BROKENLIGHT;
+                    Broken();
                 }
-                else lightMode = 1 - lightMode;
+                else
+                {
+                    if (lightMode == LightMode.HORGREEN)
+                        VertGreen();
+                    else
+                        HorGreen();
+                }
             }
             if (crosswayChance > 1) crosswayChance--;
         }
         public void FixLightDelayed()//бригаду вызвать
         {
-            lightMode = C.FIXINGLIGHT;
+            Fixing();
             Timer fixTimer = new Timer(C.FixLightDelay);
             fixTimer.AutoReset = false;
             fixTimer.Elapsed += Delay;
@@ -108,79 +110,90 @@ namespace CarsGame
         }
         private void Delay(Object source, ElapsedEventArgs e)//починить окончательно
         {
-            lightMode = C.HORGREEN;
+            RandomMode();
         }
-        public Road GetTurnRoad(Vehicle veh)//на какую дорогу свернет данная машина
+        private void RandomMode()//рандомно поставить режим светофора
         {
-            switch(veh.Direction)
-            {
-                case C.UP:
-                    return upDownConnected[0];
-                case C.DOWN:
-                    return upDownConnected[1];
-                case C.LEFT:
-                    return leftRightConnected[0];
-                case C.RIGHT:
-                    return leftRightConnected[1];
-                default:
-                    return null;
-            }
+            int mode = Field.Rand.Next(2);
+            if (mode == 0)
+                HorGreen();
+            else
+                VertGreen();
         }
-        public double[] GetStartPosition(int direction)
+        private void HorGreen()//режим когда зеленый горит горизонтально
         {
-            switch(direction)
-            {
-                case C.RIGHT:
-                    return new double[2] { position[C.X]-C.VehicleSize.Width, position[C.Y] + C.bigDelta };
-                case C.DOWN:
-                    return new double[2] { position[C.X]+C.smallDelta, position[C.Y]-C.VehicleSize.Width };
-                case C.LEFT:
-                    return new double[2] { position[C.X]+size[C.X]+C.VehicleSize.Width, position[C.Y] + C.smallDelta };
-                default:
-                    return new double[2] { position[C.X]+C.bigDelta, position[C.Y] + size[C.X] + C.VehicleSize.Width };
-            }
+            lightMode = LightMode.HORGREEN;
+            lightImage = C.IHorGreenPic;
         }
-        public double[] GetAfterMiddlePosition(int direction)
+        private void VertGreen()//режим когда зеленый горит вертикально
+        {
+            lightMode = LightMode.VERTGREEN;
+            lightImage = C.IVertGreenPic;
+        }
+        private void Broken()//режим сломанного светофора
+        {
+            lightMode = LightMode.BROKEN;
+            lightImage = C.IBrokenLightPic;
+        }
+        private void Fixing()//Светофор в ремонте
+        {
+            lightMode = LightMode.FIXING;
+            lightImage = C.IFixingPic;
+        }
+        public PointF GetStartPosition(Direction direction)//позиция перед заездом на перекресток
         {
             switch (direction)
             {
-                case C.RIGHT:
-                    return new double[2] { position[C.X]+size[C.X]/2, position[C.Y] + C.bigDelta };
-                case C.DOWN:
-                    return new double[2] { position[C.X] + C.smallDelta, position[C.Y]+ size[C.X] / 2 };
-                case C.LEFT:
-                    return new double[2] { position[C.X] +size[C.X]/2, position[C.Y] + C.smallDelta };
+                case Direction.RIGHT:
+                    return new PointF(position.X - C.VehicleSize.Width, position.Y + C.bigDelta);
+                case Direction.DOWN:
+                    return new PointF(position.X + C.smallDelta, position.Y - C.VehicleSize.Width);
+                case Direction.LEFT:
+                    return new PointF(position.X + size.Width + C.VehicleSize.Width, position.Y + C.smallDelta);
                 default:
-                    return new double[2] { position[C.X] + C.bigDelta, position[C.Y] + size[C.X] /2};
+                    return new PointF(position.X + C.bigDelta, position.Y + size.Width + C.VehicleSize.Width);
             }
         }
-        public double[] GetBeforeMiddlePosition(int direction)
+        public PointF GetAfterMiddlePosition(Direction direction)//задний бампер ровно на середине перекрестка
         {
             switch (direction)
             {
-                case C.RIGHT:
-                    return new double[2] { position[C.X], position[C.Y] + C.bigDelta };
-                case C.DOWN:
-                    return new double[2] { position[C.X] + C.smallDelta, position[C.Y]};
-                case C.LEFT:
-                    return new double[2] { position[C.X] + size[C.X], position[C.Y] + C.smallDelta };
+                case Direction.RIGHT:
+                    return new PointF(position.X + size.Width / 2, position.Y + C.bigDelta);
+                case Direction.DOWN:
+                    return new PointF(position.X + C.smallDelta, position.Y + size.Width / 2);
+                case Direction.LEFT:
+                    return new PointF(position.X + size.Width / 2, position.Y + C.smallDelta);
                 default:
-                    return new double[2] { position[C.X] + C.bigDelta, position[C.Y] + size[C.X] };
+                    return new PointF(position.X + C.bigDelta, position.Y + size.Width / 2);
+            }
+        }
+        public PointF GetBeforeMiddlePosition(Direction direction)//передний бампер ровно на середине перекрестка
+        {
+            switch (direction)
+            {
+                case Direction.RIGHT:
+                    return new PointF(position.X, position.Y + C.bigDelta);
+                case Direction.DOWN:
+                    return new PointF(position.X + C.smallDelta, position.Y);
+                case Direction.LEFT:
+                    return new PointF(position.X + size.Width, position.Y + C.smallDelta);
+                default:
+                    return new PointF(position.X + C.bigDelta, position.Y + size.Width);
             }
         }
 
-        public Crossway(double x, double y)
+        public Crossway(float x, float y)
         {
-            position = new double[2] { x, y };
-            size = new double[2];
-            turning = new int[3];
-            size[C.X] = C.ICrossPic.Size.Width;
-            size[C.Y] = C.ICrossPic.Size.Height;
-            lightMode = C.HORGREEN;
+            position = new PointF( x, y );
+            size = new Size();
+            turning = new Turn[3];
+            size.Width = C.ICrossPic.Size.Width;
+            size.Height = C.ICrossPic.Size.Height;
+            RandomMode();
             crosswayChance = C.CrosswayChance;
-            upDownConnected = new VertRoad[2];
-            leftRightConnected = new HorRoad[2];
-            changeLight = new Timer(RandomGen.Rand.Next(C.TrafficLightChangeIntervalMin, C.TrafficLightChangeIntervalMax));
+            connectedRoads = new Road[4];
+            changeLight = new Timer(Field.Rand.Next(C.ChangeLightMin, C.ChangeLightMax));
             changeLight.AutoReset = true;
             changeLight.Elapsed += ChangeLightMode;
             changeLight.Start();

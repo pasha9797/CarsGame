@@ -18,7 +18,7 @@ namespace CarsGame
         Graphics gBitmap;
         Rectangle r;
         public int width, height;
-        public System.Timers.Timer updateState;
+        public System.Windows.Forms.Timer updateState;
 
         public Form1()
         {
@@ -34,11 +34,12 @@ namespace CarsGame
             r = ClientRectangle;
             width = r.Width;
             height = r.Height;
-            updateState = new System.Timers.Timer(C.UpdateInterval);
-            updateState.Elapsed += UpdateState;
-            updateState.AutoReset = true;
+            Field.Initialize();
+            updateState = new System.Windows.Forms.Timer();
+            updateState.Interval = C.UpdateInterval;
+            updateState.Tick += UpdateState;
+            //updateState.AutoReset = true;
             updateState.Start();
-            Field.CreateRoadsAndCrossways();
         }
 
         private void GoFullscreen()
@@ -48,18 +49,11 @@ namespace CarsGame
             this.Bounds = Screen.PrimaryScreen.Bounds;
         }
 
-        public void UpdateState(Object source, ElapsedEventArgs e)
+        public void UpdateState(Object sender, EventArgs e)
         {
             Field.MainUpdate();
-            try
-            {
-                Field.Draw(gBitmap);
-                gScreen.DrawImage(bitmap, r);
-            }
-            catch { }
-            
-
-   
+            Field.Draw(gBitmap);
+            gScreen.DrawImage(bitmap, r);
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
