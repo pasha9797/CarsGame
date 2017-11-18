@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 
-namespace CarsGame
+namespace CarsGameLib
 {
-    public class VertRoad:Road
+    public class VertRoad : Road
     {
         public override Direction GetDirectionToMove(PointF pos)
         {
@@ -15,13 +15,15 @@ namespace CarsGame
             {
                 return Direction.DOWN;
             }
-            else
+            else if (pos.X == carsEnd.X && pos.Y == carsEnd.Y)
             {
                 return Direction.UP;
             }
+            else
+                throw new RoadException("Can not get a direction to move for a vehicle (Wrong vehicle position)");
         }
 
-        public VertRoad(float x,float y):base(x,y)
+        public VertRoad(float x, float y, IGameContext gc) : base(x, y, gc)
         {
             picture = C.IVertRoadPic;
             this.size.Width = C.IVertRoadPic.Size.Width;

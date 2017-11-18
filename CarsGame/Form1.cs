@@ -13,11 +13,11 @@ namespace CarsGame
 {
     public partial class Form1 : Form
     {
+        Model model;
         Bitmap bitmap;
         Graphics gScreen;
         Graphics gBitmap;
         Rectangle r;
-        public int width, height;
         public System.Windows.Forms.Timer updateState;
 
         public Form1()
@@ -28,15 +28,13 @@ namespace CarsGame
         private void Form1_Load(object sender, EventArgs e)
         {
             GoFullscreen();
+            model = new Model(this.Size);
             gScreen = this.CreateGraphics();
             bitmap = new Bitmap(ClientRectangle.Width, ClientRectangle.Height);
             gBitmap = Graphics.FromImage(bitmap);
             r = ClientRectangle;
-            width = r.Width;
-            height = r.Height;
-            Field.Initialize();
             updateState = new System.Windows.Forms.Timer();
-            updateState.Interval = C.UpdateInterval;
+            updateState.Interval = CarsGameLib.C.UpdateInterval;
             updateState.Tick += UpdateState;
             //updateState.AutoReset = true;
             updateState.Start();
@@ -51,8 +49,8 @@ namespace CarsGame
 
         public void UpdateState(Object sender, EventArgs e)
         {
-            Field.MainUpdate();
-            Field.Draw(gBitmap);
+            model.MainUpdate();
+            model.Draw(gBitmap);
             gScreen.DrawImage(bitmap, r);
         }
 
@@ -62,12 +60,12 @@ namespace CarsGame
 
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
-            Field.CheckFixLight(e.X, e.Y);
+            model.CheckFixLight(e.X, e.Y);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Field.LightsInspection();
+            model.LightsInspection();
         }
 
         private void button1_Click(object sender, EventArgs e)

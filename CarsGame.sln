@@ -5,6 +5,16 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarsGame", "CarsGame\CarsGame.csproj", "{136747CC-3685-4B1A-840D-E6CBDC78C770}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarsGameLib", "VehiclePlugin\CarsGameLib.csproj", "{0881ABD1-107D-48E9-A06A-806CF0D9E478}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Car", "Car\Car.csproj", "{CE330FB6-5594-4DFB-8B30-32C00A5F3CAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bus", "Bus\Bus.csproj", "{3232E0B4-D4E8-4D8E-8192-4C57A71002F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Truck", "Truck\Truck.csproj", "{66940B16-3FF7-4C22-A728-8543B920EB38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Evacuator", "Evacuator\Evacuator.csproj", "{94BE493B-A0AC-4148-9F5C-F5774574943B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +25,26 @@ Global
 		{136747CC-3685-4B1A-840D-E6CBDC78C770}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{136747CC-3685-4B1A-840D-E6CBDC78C770}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{136747CC-3685-4B1A-840D-E6CBDC78C770}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0881ABD1-107D-48E9-A06A-806CF0D9E478}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0881ABD1-107D-48E9-A06A-806CF0D9E478}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0881ABD1-107D-48E9-A06A-806CF0D9E478}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0881ABD1-107D-48E9-A06A-806CF0D9E478}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE330FB6-5594-4DFB-8B30-32C00A5F3CAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE330FB6-5594-4DFB-8B30-32C00A5F3CAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE330FB6-5594-4DFB-8B30-32C00A5F3CAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE330FB6-5594-4DFB-8B30-32C00A5F3CAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3232E0B4-D4E8-4D8E-8192-4C57A71002F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3232E0B4-D4E8-4D8E-8192-4C57A71002F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3232E0B4-D4E8-4D8E-8192-4C57A71002F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3232E0B4-D4E8-4D8E-8192-4C57A71002F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66940B16-3FF7-4C22-A728-8543B920EB38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66940B16-3FF7-4C22-A728-8543B920EB38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66940B16-3FF7-4C22-A728-8543B920EB38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66940B16-3FF7-4C22-A728-8543B920EB38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94BE493B-A0AC-4148-9F5C-F5774574943B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94BE493B-A0AC-4148-9F5C-F5774574943B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94BE493B-A0AC-4148-9F5C-F5774574943B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94BE493B-A0AC-4148-9F5C-F5774574943B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
-using System.Drawing;
 
-namespace CarsGame
+namespace CarsGameLib
 {
     public class Crossway
     {
@@ -15,10 +15,22 @@ namespace CarsGame
         private LightMode lightMode;
         private Road[] connectedRoads;
         private Timer changeLight;
-        private Turn[] turning;
+        private Dictionary<Type, Turn> turning;
         private int crosswayChance;
         private Image lightImage;
+        private IGameContext context;
 
+        public IGameContext Context
+        {
+            get
+            {
+                return context;
+            }
+            set
+            {
+                context = value;
+            }
+        }
         public PointF Position
         {
             get
@@ -40,7 +52,7 @@ namespace CarsGame
                 return size;
             }
         }
-        public Turn[] Turning
+        public Dictionary<Type, Turn> Turning
         {
             get
             {
@@ -66,7 +78,7 @@ namespace CarsGame
             }
             set
             {
-                crosswayChance=value;
+                crosswayChance = value;
             }
         }
         public Road[] ConnectedRoads
@@ -83,9 +95,9 @@ namespace CarsGame
 
         public void ChangeLightMode(Object source, ElapsedEventArgs e)//меняем сигнал
         {
-            if(lightMode==LightMode.HORGREEN || lightMode==LightMode.VERTGREEN)
+            if (lightMode == LightMode.HORGREEN || lightMode == LightMode.VERTGREEN)
             {
-                int r = Field.Rand.Next(crosswayChance);
+                int r = Context.Rand.Next(crosswayChance);
                 if (r == 0)
                 {
                     Broken();
@@ -102,11 +114,16 @@ namespace CarsGame
         }
         public void FixLightDelayed()//бригаду вызвать
         {
-            Fixing();
-            Timer fixTimer = new Timer(C.FixLightDelay);
-            fixTimer.AutoReset = false;
-            fixTimer.Elapsed += Delay;
-            fixTimer.Start();
+            if (lightMode == LightMode.BROKEN)
+            {
+                Fixing();
+                Timer fixTimer = new Timer(C.FixLightDelay);
+                fixTimer.AutoReset = false;
+                fixTimer.Elapsed += Delay;
+                fixTimer.Start();
+            }
+            else
+                throw new CrosswayException("Trying to fix light that is not broken");
         }
         private void Delay(Object source, ElapsedEventArgs e)//починить окончательно
         {
@@ -114,7 +131,7 @@ namespace CarsGame
         }
         private void RandomMode()//рандомно поставить режим светофора
         {
-            int mode = Field.Rand.Next(2);
+            int mode = Context.Rand.Next(2);
             if (mode == 0)
                 HorGreen();
             else
@@ -150,8 +167,10 @@ namespace CarsGame
                     return new PointF(position.X + C.smallDelta, position.Y - C.VehicleSize.Width);
                 case Direction.LEFT:
                     return new PointF(position.X + size.Width + C.VehicleSize.Width, position.Y + C.smallDelta);
-                default:
+                case Direction.UP:
                     return new PointF(position.X + C.bigDelta, position.Y + size.Width + C.VehicleSize.Width);
+                default:
+                    return new PointF(0, 0);
             }
         }
         public PointF GetAfterMiddlePosition(Direction direction)//задний бампер ровно на середине перекрестка
@@ -164,8 +183,10 @@ namespace CarsGame
                     return new PointF(position.X + C.smallDelta, position.Y + size.Width / 2);
                 case Direction.LEFT:
                     return new PointF(position.X + size.Width / 2, position.Y + C.smallDelta);
-                default:
+                case Direction.UP:
                     return new PointF(position.X + C.bigDelta, position.Y + size.Width / 2);
+                default:
+                    return new PointF(0, 0);
             }
         }
         public PointF GetBeforeMiddlePosition(Direction direction)//передний бампер ровно на середине перекрестка
@@ -178,22 +199,25 @@ namespace CarsGame
                     return new PointF(position.X + C.smallDelta, position.Y);
                 case Direction.LEFT:
                     return new PointF(position.X + size.Width, position.Y + C.smallDelta);
-                default:
+                case Direction.UP:
                     return new PointF(position.X + C.bigDelta, position.Y + size.Width);
+                default:
+                    return new PointF(0, 0);
             }
         }
 
-        public Crossway(float x, float y)
+        public Crossway(float x, float y, IGameContext gc)
         {
-            position = new PointF( x, y );
+            Context = gc;
+            position = new PointF(x, y);
             size = new Size();
-            turning = new Turn[3];
+            turning = new Dictionary<Type, Turn>();
             size.Width = C.ICrossPic.Size.Width;
             size.Height = C.ICrossPic.Size.Height;
             RandomMode();
             crosswayChance = C.CrosswayChance;
             connectedRoads = new Road[4];
-            changeLight = new Timer(Field.Rand.Next(C.ChangeLightMin, C.ChangeLightMax));
+            changeLight = new Timer(Context.Rand.Next(C.ChangeLightMin, C.ChangeLightMax));
             changeLight.AutoReset = true;
             changeLight.Elapsed += ChangeLightMode;
             changeLight.Start();

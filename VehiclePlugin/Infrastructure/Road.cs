@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Drawing;
 using System.Threading.Tasks;
 
-namespace CarsGame
+namespace CarsGameLib
 {
     public abstract class Road
     {
@@ -16,6 +16,7 @@ namespace CarsGame
         protected Crossway startCrossway;
         protected Crossway endCrossway;
 
+        public IGameContext Context { get; set; }
         public PointF Position
         {
             get
@@ -73,7 +74,10 @@ namespace CarsGame
             PointF coords;
             if (beg_end == 0)
                 coords = carsStart;
-            else coords = carsEnd;
+            else if (beg_end == 1)
+                coords = carsEnd;
+            else
+                throw new RoadException("Can't indentify wheather the vehicle is entering the beginning or the end of the road");
             switch (direction)
             {
                 case Direction.RIGHT:
@@ -85,9 +89,9 @@ namespace CarsGame
                 case Direction.LEFT:
                     coords.X -= C.VehicleSize.Width;
                     break;
-                default:
+                case Direction.UP:
                     coords.Y -= C.VehicleSize.Width;
-                        break;
+                    break;
             }
             return coords;
         }
@@ -97,16 +101,19 @@ namespace CarsGame
             {
                 return GetStartPosition();
             }
-            else
+            else if (this.EndCrossway == null)
             {
                 return GetEndPosition();
             }
+            else
+                throw new RoadException("Trying to spawn a vehicle not on the edge road");
         }
         public abstract Direction GetDirectionToMove(PointF pos);//направление движения
 
-        public Road(float x, float y)
+        public Road(float x, float y, IGameContext gc)
         {
-            position = new PointF(x, y );
+            Context = gc;
+            position = new PointF(x, y);
             size = new Size();
         }
     }

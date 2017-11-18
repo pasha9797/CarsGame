@@ -1,29 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Drawing;
 using System.Timers;
 
-namespace CarsGame
+namespace CarsGameLib
 {
     public abstract class Vehicle
     {
-        protected Size size;
-        protected PointF position;
-        protected Direction direction;
-        protected Image picture;
-        protected int stepsCount;
-        protected object curPlacement;
-        protected Timer killcar;
-        protected bool broken;
+        private PointF position;
+        private Direction direction;
+        private string picPath, brokenPicPath;
+        private Image picture;
+        private int stepsCount;
+        private object curPlacement;
+        private Timer killcar;
+        private bool broken;
+        private IGameContext context;
+        private Turn[] turns;
 
+        public IGameContext Context
+        {
+            get
+            {
+                return context;
+            }
+        }
         public Size Size
         {
             get
             {
-                return size;
+                return picture.Size;
+            }
+        }
+        public string PicPath
+        {
+            get
+            {
+                return picPath;
+            }
+            set
+            {
+                picPath = value;
+                picture = Image.FromFile(Context.PluginsDirs[this.GetType()]+"\\"+picPath);
+            }
+        }
+        public string BrokenPicPath
+        {
+            get
+            {
+                return brokenPicPath;
+            }
+            set
+            {
+                brokenPicPath = value;
             }
         }
         public PointF Position
@@ -80,12 +112,24 @@ namespace CarsGame
                 broken = value;
             }
         }
+        public Turn[] Turns
+        {
+            get
+            {
+                return turns;
+            }
+            set
+            {
+                turns = value;
+                Context.AddTurnRules(this.GetType(), turns);
+            }
+        }
 
         public virtual void Move()//двигаем по таймеру в Field
         {
-            if (!DidWeCrash())
+            if (!Broken)
             {
-                if (!Broken)
+                if (!DidWeCrash())
                 {
                     if (curPlacement is Road)
                     {
@@ -126,19 +170,19 @@ namespace CarsGame
                         }
                     }
                 }
-            }
-            else
-            {
-                if (curPlacement is Crossway)
+                else //препятствие на пути
                 {
-                    if ((curPlacement as Crossway).LightMode == LightMode.BROKEN ||
-                        (curPlacement as Crossway).LightMode == LightMode.FIXING)
-                        BreakVehicle(true);//врезались
-                    else
+                    if (curPlacement is Crossway)
                     {
-                        Vehicle v = Field.FindVehicleInPoint(GetFrontPoint(), this);
-                        if (Field.FindVehicleInPoint(v.GetFrontPoint(), v) == this)
-                            BreakVehicle(true);//лобовое столкновение
+                        if ((curPlacement as Crossway).LightMode == LightMode.BROKEN ||
+                            (curPlacement as Crossway).LightMode == LightMode.FIXING)
+                            BreakVehicle(true);//врезались
+                        else
+                        {
+                            Vehicle v = Context.FindVehicleInPoint(GetFrontPoint(), this);
+                            if (Context.FindVehicleInPoint(v.GetFrontPoint(), v) == this)
+                                BreakVehicle(true);//лобовое столкновение
+                        }
                     }
                 }
             }
@@ -148,26 +192,31 @@ namespace CarsGame
             if (!broken)
             {
                 broken = true;
-                PictureBroken();
-                Field.CallEvacuator(this);
+                SetBrokenPicture();
+                Context.CallEvacuator(this);
                 if (BreakOpponent)
                 {
-                    Field.PlaySound(C.CrashSound);
+                    Context.PlaySound(C.CrashSound);
 
-                    Vehicle veh = Field.FindVehicleInPoint(GetFrontPoint(), this);
-                    if (veh != null) veh.BreakVehicle(false);//ломаем того, в кого врезались               
+                    Vehicle veh = Context.FindVehicleInPoint(GetFrontPoint(), this);
+                    if (veh != null && !veh.Broken) veh.BreakVehicle(false);//ломаем того, в кого врезались               
                 }
-                Field.Score -= C.CrashScore;
+                Context.Score-=C.CrashScore;
 
                 killcar = new Timer(C.KillVehicleDelay);
                 killcar.AutoReset = false;
                 killcar.Elapsed += HideByTimer;
                 killcar.Start();
             }
+            else
+                throw new VehicleException("Trying to break a car wich is already broken");
         }
         public void StopKill()//остановить таймер на уничтожение машины
         {
-            killcar.Stop();
+            if (killcar != null)
+                killcar.Stop();
+            else
+                throw new VehicleException("Trying to stop killing the car wich is not supposed to be killed");
         }
         public void HideByTimer(Object source, ElapsedEventArgs e)//убрать за границу экрана(машина удалится таймером в Field)
         {
@@ -175,21 +224,21 @@ namespace CarsGame
         }
         public void Hide()//собственно убирание
         {
-            position.X = Program.mainForm.Width * 4;
+            position.X = Context.FormSize.Width * 4;
         }
         public bool IsVisible()//не скрыта ли машина за экраном
         {
 
-                if (position.X + size.Width < 0 || position.X - size.Width > Program.mainForm.width || 
-                position.Y + size.Width < 0 || position.Y - size.Width > Program.mainForm.height)
+            if (position.X + Size.Width < 0 || position.X - Size.Width > Context.FormSize.Width ||
+            position.Y + Size.Width < 0 || position.Y - Size.Width > Context.FormSize.Height)
                 return false;
-                else return true;
+            else return true;
 
         }
         protected bool DidWeCrash()//проверка на аварию
         {
             PointF frontPoint = GetFrontPoint();
-            return Field.FindVehicleInPoint(frontPoint, this) != null;
+            return Context.FindVehicleInPoint(frontPoint, this) != null;
         }
         public PointF GetFrontPoint()//координата середины переднего бампера
         {
@@ -197,20 +246,20 @@ namespace CarsGame
             switch (direction)
             {
                 case Direction.UP:
-                    frontPoint.X = position.X + size.Height / 2;
-                    frontPoint.Y = position.Y - size.Width;
+                    frontPoint.X = position.X + Size.Height / 2;
+                    frontPoint.Y = position.Y - Size.Width;
                     break;
                 case Direction.DOWN:
-                    frontPoint.X = position.X - size.Height / 2;
-                    frontPoint.Y = position.Y + size.Width;
+                    frontPoint.X = position.X - Size.Height / 2;
+                    frontPoint.Y = position.Y + Size.Width;
                     break;
                 case Direction.LEFT:
-                    frontPoint.X = position.X - size.Width;
-                    frontPoint.Y = position.Y - size.Height / 2;
+                    frontPoint.X = position.X - Size.Width;
+                    frontPoint.Y = position.Y - Size.Height / 2;
                     break;
                 case Direction.RIGHT:
-                    frontPoint.X = position.X + size.Width;
-                    frontPoint.Y = position.Y + size.Height / 2;
+                    frontPoint.X = position.X + Size.Width;
+                    frontPoint.Y = position.Y + Size.Height / 2;
                     break;
             }
             return frontPoint;
@@ -231,12 +280,14 @@ namespace CarsGame
                         return 0;
                 }
             }
-            else
+            else if (curPlacement is Road)
             {
                 if (curPlacement is HorRoad)
                     return C.StepsToPassHorRoad;
                 else return C.StepsToPassVertRoad;
             }
+            else
+                throw new VehicleException("Wrong vehicle placement (Neither crossway nor road");
         }
         private void SetTurnDir()//повернуть машину куда нужно
         {
@@ -244,10 +295,10 @@ namespace CarsGame
         }
         protected void AddTurn(ref Direction direction, Turn turn)//получить конечное положение авто после поворота
         {
-            switch(direction)
+            switch (direction)
             {
                 case Direction.RIGHT:
-                    switch(turn)
+                    switch (turn)
                     {
                         case Turn.RIGHT:
                             direction = Direction.DOWN;
@@ -295,29 +346,41 @@ namespace CarsGame
         protected Crossway GetCrossway()//на какой перекресток свернуть
         {
             Road currentRoad = curPlacement as Road;
-            switch (direction)
+            if (currentRoad != null)
             {
-                case Direction.UP:
-                case Direction.LEFT:
-                    return currentRoad.StartCrossway;
-                case Direction.DOWN:
-                case Direction.RIGHT:
-                    return currentRoad.EndCrossway;
+                switch (direction)
+                {
+                    case Direction.UP:
+                    case Direction.LEFT:
+                        return currentRoad.StartCrossway;
+                    case Direction.DOWN:
+                    case Direction.RIGHT:
+                        return currentRoad.EndCrossway;
+                    default:
+                        return null;
+                }
             }
-            return null;
+            else throw new VehicleException("Vehicle is expected to be on road but it is not");
         }
         protected PointF GetResumeRoadPosition()//для сьезда с перекрестка на дорогу
         {
-            switch (direction)
+            if (curPlacement is Road)
             {
-                case Direction.RIGHT:
-                case Direction.DOWN:
-                    return (CurPlacement as Road).GetResumePosition(0, direction);
-                case Direction.LEFT:
-                case Direction.UP:
-                default:
-                    return (CurPlacement as Road).GetResumePosition(1, direction);
+                switch (direction)
+                {
+                    case Direction.RIGHT:
+                    case Direction.DOWN:
+                        return (CurPlacement as Road).GetResumePosition(0, direction);
+                    case Direction.LEFT:
+                    case Direction.UP:
+                        return (CurPlacement as Road).GetResumePosition(1, direction);
+                    default:
+                        return new PointF(0, 0);
+                }
             }
+            else
+                throw new VehicleException("Vehicle is expected to be on road but it is not");
+
         }
         protected bool CanWeGo()//проверка сигналов светофора
         {
@@ -332,8 +395,10 @@ namespace CarsGame
                 case Direction.LEFT:
                 case Direction.RIGHT:
                     return GetCrossway().LightMode == LightMode.HORGREEN;
+                default:
+                    return false;
             }
-            return false;
+
         }
         protected void OneMove()//один шаг машины
         {
@@ -366,10 +431,19 @@ namespace CarsGame
             position.X = x;
             position.Y = y;
         }
-        protected abstract Turn GetTurn();//куда поворачивать на перекрестке
-        protected abstract void PictureBroken();//замена текстурки
+        protected Turn GetTurn()//куда поворачивать на перекрестке
+        {
+            if (curPlacement is Crossway)
+                return (curPlacement as Crossway).Turning[this.GetType()];
+            else
+                throw new VehicleException("Vehicle is expected to be on crossway but it is not");
+        }
+        protected void SetBrokenPicture()//замена текстурки
+        {
+            picture = Image.FromFile(Context.PluginsDirs[this.GetType()] + "\\"+brokenPicPath);
+        }
 
-        public Vehicle(Road road)
+        public Vehicle(Road road, IGameContext gc)
         {
             if (road != null)
             {
@@ -377,11 +451,10 @@ namespace CarsGame
                 curPlacement = road;
                 direction = road.GetDirectionToMove(position);
             }
-            size = new Size();
+            turns = new Turn[4];
             stepsCount = -(int)(C.VehicleSize.Width / C.VehicleStep);
             broken = false;
-            this.size.Width = C.VehicleSize.Width;
-            this.size.Height = C.VehicleSize.Height;
+            context = gc;
         }
     }
 }
